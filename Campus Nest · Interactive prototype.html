@@ -1,0 +1,1177 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Campus Nest · Interactive prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=Unbounded:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+  --page:#E7E9F6;--page-ink:#17143F;--page-muted:#5B5E86;--page-line:#C9CCE6;--page-card:#F6F7FD;
+  --navy:#0B0A2E;--s1:#15124A;--s2:#1E1A66;--s3:#29247F;--line:#2E2A8A;--text:#F2F3FF;--muted:#B9BBE6;
+  --primary:#5A63E8;--peri:#8C9EFF;--mint:#6FD6A0;--amber:#F6C667;--lilac:#C3A6F7;--coral:#FF8A80;
+  --head:'Unbounded','Onest',system-ui,sans-serif;--body:'Onest',system-ui,-apple-system,'Segoe UI',sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--page:#06051A;--page-ink:#E8E9FF;--page-muted:#9EA1CF;--page-line:#24215E;--page-card:#100E33;color-scheme:dark;}}
+:root[data-theme="dark"]{--page:#06051A;--page-ink:#E8E9FF;--page-muted:#9EA1CF;--page-line:#24215E;--page-card:#100E33;color-scheme:dark;}
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;min-height:100%;background:var(--page);color:var(--page-ink);font-family:var(--body);-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}
+input,textarea,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--peri);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ---------- stage ---------- */
+.stage{display:flex;gap:32px;align-items:flex-start;justify-content:center;padding:28px 24px 40px;min-height:100vh}
+.panel{width:290px;flex:none;position:sticky;top:24px}
+.panel h1{font-family:var(--head);font-weight:700;font-size:26px;line-height:1.1;margin:0 0 6px;letter-spacing:-.01em}
+.panel p{margin:0 0 18px;color:var(--page-muted);font-size:14px;line-height:1.5}
+.seg{display:flex;background:var(--page-card);border:1px solid var(--page-line);border-radius:14px;padding:4px;margin-bottom:10px}
+.seg button{flex:1;padding:9px 6px;border-radius:10px;font-size:13px;font-weight:600;color:var(--page-muted)}
+.seg button.on{background:var(--primary);color:#fff}
+.jump{margin-top:16px;border-top:1px solid var(--page-line);padding-top:12px;max-height:calc(100vh - 330px);overflow:auto}
+.jump h2{font-size:12px;font-weight:600;color:var(--page-muted);margin:12px 0 6px}
+.jump button{display:flex;gap:8px;width:100%;text-align:left;padding:6px 8px;border-radius:8px;font-size:13.5px;color:var(--page-ink)}
+.jump button:hover{background:var(--page-card)}
+.jump button.cur{background:var(--page-card);font-weight:600}
+.jump code{font:600 11.5px var(--body);color:var(--primary);min-width:40px}
+.hint{font-size:12.5px;color:var(--page-muted);margin-top:12px;line-height:1.5}
+.fab{display:none}
+
+/* ---------- devices ---------- */
+.phone{width:390px;height:844px;border-radius:52px;background:#020114;padding:10px;box-shadow:0 30px 80px -30px rgba(20,15,90,.55);flex:none;position:relative}
+.screen{position:relative;width:100%;height:100%;border-radius:42px;overflow:hidden;background:var(--navy);color:var(--text);display:flex;flex-direction:column}
+.notch{position:absolute;top:8px;left:50%;transform:translateX(-50%);width:118px;height:32px;border-radius:20px;background:#020114;z-index:30}
+.sbar{height:48px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 30px 0 34px;font-size:14px;font-weight:600}
+.browser{width:min(1240px,calc(100vw - 380px));height:min(820px,calc(100vh - 56px));min-height:640px;border-radius:16px;background:#020114;padding:0;overflow:hidden;box-shadow:0 30px 80px -30px rgba(20,15,90,.55);display:flex;flex-direction:column;flex:none}
+.bbar{height:44px;flex:none;display:flex;align-items:center;gap:8px;padding:0 14px;background:#100E33}
+.bbar i{width:11px;height:11px;border-radius:50%;background:#3A3670;display:block}
+.url{margin-left:12px;flex:1;max-width:460px;height:28px;border-radius:8px;background:#1C1A4A;color:#B9BBE6;font-size:13px;display:flex;align-items:center;padding:0 12px}
+.wscreen{flex:1;display:flex;background:var(--navy);color:var(--text);min-height:0;position:relative}
+.side{width:236px;flex:none;background:var(--s1);border-right:1px solid var(--line);padding:22px 14px;display:flex;flex-direction:column;gap:2px;overflow:auto}
+.side .brand{font-family:var(--head);font-weight:700;font-size:19px;padding:0 10px 4px}
+.side .who{font-size:12.5px;color:var(--peri);padding:0 10px 18px}
+.side button{display:flex;align-items:center;gap:10px;padding:10px;border-radius:12px;font-size:14.5px;color:var(--muted);text-align:left}
+.side button.on{background:rgba(90,99,232,.32);color:var(--text);font-weight:600}
+.side button:hover{color:var(--text)}
+.wmain{flex:1;display:flex;flex-direction:column;min-width:0}
+.wtop{height:64px;flex:none;display:flex;align-items:center;gap:12px;padding:0 28px;border-bottom:1px solid var(--line)}
+.wtop .t{font-family:var(--head);font-weight:500;font-size:20px;flex:1}
+.wbody{flex:1;overflow:auto;padding:24px 28px 40px}
+.wbody .cnt{max-width:760px}
+.wbody .cnt.wide{max-width:none}
+
+/* ---------- app content ---------- */
+.body{flex:1;overflow-y:auto;overflow-x:hidden;position:relative;scrollbar-width:none}
+.body::-webkit-scrollbar{display:none}
+.pad{padding:4px 20px 28px}
+.top{display:flex;align-items:center;gap:12px;padding:6px 20px 14px}
+.top h1,.h1{font-family:var(--head);font-weight:500;font-size:22px;line-height:1.2;margin:0;letter-spacing:-.01em}
+.top .sub{font-size:13px;color:var(--muted);margin-top:3px}
+.back{width:42px;height:42px;border-radius:50%;background:var(--s1);display:grid;place-items:center;flex:none}
+.icon{width:22px;height:22px;flex:none;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.iconbtn{width:42px;height:42px;border-radius:50%;background:var(--s1);display:grid;place-items:center;position:relative;flex:none}
+.dot{position:absolute;top:9px;right:10px;width:9px;height:9px;border-radius:50%;background:var(--coral);border:2px solid var(--s1)}
+h3{font-size:15px;font-weight:600;margin:22px 0 10px}
+.muted{color:var(--muted)}
+.small{font-size:12.5px}
+.card{background:var(--s1);border:1px solid var(--line);border-radius:20px;padding:16px}
+.card.flat{border-color:transparent}
+.row{display:flex;align-items:center;gap:12px}
+.col{display:flex;flex-direction:column;gap:10px}
+.grow{flex:1;min-width:0}
+.between{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.list{display:flex;flex-direction:column;gap:10px}
+.tap{transition:transform .12s ease}
+.tap:active{transform:scale(.98)}
+.item{display:flex;align-items:center;gap:14px;background:var(--s1);border-radius:18px;padding:14px;text-align:left;width:100%}
+.item .t{font-weight:600;font-size:15px}
+.item .s{font-size:12.5px;color:var(--muted);margin-top:3px}
+.chev{color:var(--muted);font-size:22px;line-height:1}
+.tile{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;flex:none}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;height:52px;border-radius:26px;font-weight:600;font-size:16px;width:100%;transition:transform .12s ease,opacity .2s}
+.btn:active{transform:scale(.98)}
+.btn.p{background:var(--primary);color:#fff}
+.btn.g{border:1.5px solid var(--primary);color:var(--peri)}
+.btn.s{background:var(--s2);color:var(--text)}
+.btn.d{border:1.5px solid var(--coral);color:var(--coral)}
+.btn.m{background:var(--mint);color:#08251A}
+.btn.sm{height:40px;font-size:14px;border-radius:20px;width:auto;padding:0 16px}
+.btn[disabled]{opacity:.45;pointer-events:none}
+.btns{display:flex;gap:10px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{padding:7px 13px;border-radius:16px;border:1px solid var(--line);font-size:13px;color:var(--peri);background:transparent;white-space:nowrap}
+.chip.on{background:rgba(140,158,255,.22);border-color:var(--peri);color:var(--text)}
+.chip.warn{border-color:var(--coral);color:var(--coral)}
+.chip.warn.on{background:rgba(255,138,128,.2);color:var(--text)}
+.chip.amber{border-color:var(--amber);color:var(--amber)}
+.chip.amber.on{background:rgba(246,198,103,.2);color:var(--text)}
+.pill{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:12px;font-size:12px;font-weight:600}
+.pill.mint{background:rgba(111,214,160,.16);color:var(--mint)}
+.pill.amber{background:rgba(246,198,103,.16);color:var(--amber)}
+.pill.coral{background:rgba(255,138,128,.16);color:var(--coral)}
+.pill.peri{background:rgba(140,158,255,.16);color:var(--peri)}
+.pill.lilac{background:rgba(195,166,247,.16);color:var(--lilac)}
+.ai{background:linear-gradient(160deg,#2A1F6A,#1C1650);border:1px solid rgba(195,166,247,.55);border-radius:16px;padding:12px 14px}
+.ai .k{font-size:12px;font-weight:700;color:var(--lilac);display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.ai p{margin:0;font-size:13.5px;line-height:1.45}
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.field label{font-size:12.5px;color:var(--muted);font-weight:500}
+.inp{height:50px;border-radius:14px;background:var(--s1);border:1px solid var(--line);padding:0 14px;font-size:15px;outline:none;width:100%}
+.inp:focus{border-color:var(--peri)}
+textarea.inp{height:96px;padding:12px 14px;resize:none}
+.switch{width:46px;height:28px;border-radius:14px;background:var(--line);position:relative;flex:none;transition:background .2s}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:transform .2s}
+.switch.on{background:var(--mint)}
+.switch.on::after{transform:translateX(18px)}
+.otp{display:flex;gap:8px}
+.otp input{width:46px;height:56px;border-radius:14px;background:var(--s1);border:1px solid var(--line);text-align:center;font-size:22px;font-weight:700;outline:none}
+.otp input:focus{border-color:var(--peri)}
+.bar{height:8px;border-radius:4px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:4px;background:var(--mint);transition:width .6s ease}
+.kv{display:flex;justify-content:space-between;padding:9px 0;font-size:14px;border-bottom:1px solid rgba(46,42,138,.6)}
+.kv:last-child{border-bottom:0}
+.kv span:first-child{color:var(--muted)}
+.kv span:last-child{font-weight:600;text-align:right}
+.empty{text-align:center;padding:40px 10px;color:var(--muted)}
+.empty .h1{color:var(--text);margin-bottom:8px;font-size:18px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.kpi{background:var(--s1);border-radius:16px;padding:12px}
+.kpi b{display:block;font-family:var(--head);font-weight:500;font-size:20px}
+.kpi span{font-size:12px;color:var(--muted)}
+.photo{position:relative;border-radius:16px;overflow:hidden;background:var(--s2)}
+.photo img{display:block;width:100%;height:100%;object-fit:cover}
+.photo .lbl{position:absolute;left:8px;bottom:8px;font-size:11.5px;font-weight:600;background:rgba(11,10,46,.7);padding:3px 8px;border-radius:8px}
+.photo .x{position:absolute;top:6px;right:6px;width:26px;height:26px;border-radius:50%;background:rgba(11,10,46,.75);display:grid;place-items:center;font-size:14px}
+.add{border:1.5px dashed var(--peri);border-radius:16px;display:grid;place-items:center;color:var(--peri);font-size:13px;font-weight:600;cursor:pointer;text-align:center;padding:6px}
+.add input{display:none}
+.av{border-radius:50%;overflow:hidden;flex:none;background:var(--s2)}
+.av img{width:100%;height:100%;display:block}
+.stack{display:flex}
+.stack .av{border:2px solid var(--s1);margin-left:-10px}
+.stack .av:first-child{margin-left:0}
+.tag{font-size:11px;font-weight:700;color:var(--peri);opacity:.85}
+
+/* tabbar */
+.tabbar{flex:none;height:84px;background:var(--s1);border-top:1px solid var(--line);display:flex;padding:8px 6px 18px}
+.tabbar button{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;color:var(--muted);position:relative}
+.tabbar button.on{color:var(--text);font-weight:600}
+.tabbar button.on .icon{stroke:var(--peri)}
+.tabbar .badge{position:absolute;top:-2px;left:calc(50% + 6px);min-width:17px;height:17px;border-radius:9px;background:var(--coral);color:#2A0A0A;font-size:10.5px;font-weight:700;display:grid;place-items:center;padding:0 4px}
+
+/* overlays */
+.ov{position:absolute;inset:0;background:rgba(3,2,20,.6);z-index:40;display:flex;align-items:flex-end;animation:fade .2s ease}
+.sheet{width:100%;max-height:88%;overflow:auto;background:var(--s1);border-radius:26px 26px 0 0;padding:10px 20px 26px;animation:up .25s ease}
+.sheet .grab{width:44px;height:5px;border-radius:3px;background:var(--line);margin:0 auto 14px}
+.sheet .h1{margin-bottom:6px}
+.web .ov{align-items:center;justify-content:center}
+.web .sheet{width:480px;border-radius:24px;max-height:86%}
+@keyframes fade{from{opacity:0}}
+@keyframes up{from{transform:translateY(40px);opacity:0}}
+.toast{position:absolute;left:50%;transform:translateX(-50%);width:max-content;bottom:100px;z-index:60;background:#F2F3FF;color:#12103A;padding:11px 16px;border-radius:14px;font-size:14px;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,.35);max-width:86%;text-align:center;animation:up .25s ease}
+.web .toast{bottom:32px}
+.lb{position:absolute;inset:0;background:#000;z-index:70;display:flex;flex-direction:column}
+.lb img{flex:1;min-height:0;object-fit:contain;width:100%}
+.lb .bar2{display:flex;justify-content:space-between;align-items:center;padding:56px 18px 14px;color:#fff}
+.lb .nav{display:flex;justify-content:space-between;padding:14px 18px 30px}
+.lb .nav button{width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.12);color:#fff;font-size:22px}
+.ext{position:absolute;inset:0;z-index:80;background:#F4F4F6;color:#1B1B1F;display:flex;flex-direction:column;animation:fade .2s}
+.ext .eh{background:#E4002B;color:#fff;padding:56px 20px 18px;font-weight:700;font-size:20px}
+.ext .eb{flex:1;padding:22px 20px;display:flex;flex-direction:column;gap:14px}
+.ext .ecard{background:#fff;border-radius:16px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.ext .ebtn{height:54px;border-radius:14px;background:#E4002B;color:#fff;font-weight:700;font-size:16px}
+.ext.halyk .eh,.ext.halyk .ebtn{background:#00805A}
+.ext.egov .eh,.ext.egov .ebtn{background:#1F5BBF}
+.spin{width:36px;height:36px;border-radius:50%;border:3px solid rgba(0,0,0,.12);border-top-color:currentColor;animation:rot .8s linear infinite;margin:20px auto}
+@keyframes rot{to{transform:rotate(360deg)}}
+
+/* swipe */
+.deck{position:relative;height:540px;margin:0 20px}
+.scard{position:absolute;inset:0;border-radius:28px;background:var(--s1);border:1px solid var(--line);overflow:hidden;touch-action:none;user-select:none;display:flex;flex-direction:column}
+.scard.under{transform:scale(.95) translateY(14px);opacity:.6}
+.scard .ph{height:230px;flex:none;position:relative}
+.scard .ph img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+.score{position:absolute;top:14px;right:14px;background:rgba(11,10,46,.82);border:1px solid var(--mint);color:var(--mint);font-weight:700;font-size:14px;padding:6px 12px;border-radius:16px}
+.stamp{position:absolute;top:30px;padding:6px 14px;border-radius:10px;font-family:var(--head);font-size:22px;border:3px solid;transform:rotate(-12deg);opacity:0}
+.stamp.like{left:20px;color:var(--mint)}
+.stamp.nope{right:20px;color:var(--coral);transform:rotate(12deg)}
+.sact{display:flex;justify-content:center;gap:26px;margin:16px 0 8px}
+.round{width:74px;height:74px;border-radius:50%;display:grid;place-items:center;font-weight:600;font-size:14px}
+.round.n{border:2px solid var(--coral);color:var(--coral);background:var(--s1)}
+.round.y{background:var(--primary);color:#fff}
+
+/* gallery */
+.gal{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}
+.gal::-webkit-scrollbar{display:none}
+.gal>*{flex:none;width:100%;scroll-snap-align:start}
+.dots{display:flex;gap:6px;justify-content:center;position:absolute;bottom:12px;left:0;right:0}
+.dots i{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.45)}
+.dots i.on{background:#fff}
+.lcard{background:var(--s1);border:1px solid var(--line);border-radius:22px;overflow:hidden;text-align:left;width:100%}
+.lcard .ph{height:170px;position:relative}
+.lcard .ph img{width:100%;height:100%;object-fit:cover;display:block}
+.lcard .in{padding:12px 14px 14px}
+.heart{position:absolute;top:10px;right:10px;width:36px;height:36px;border-radius:50%;background:rgba(11,10,46,.72);display:grid;place-items:center}
+.heart.on .icon{fill:var(--coral);stroke:var(--coral)}
+.promo{position:absolute;top:12px;left:12px}
+.price{font-family:var(--head);font-weight:500;font-size:18px}
+.mapbox{position:relative;border-radius:20px;overflow:hidden;border:1px solid var(--line)}
+.mapbox svg{display:block;width:100%;height:auto}
+.pin{position:absolute;transform:translate(-50%,-100%);padding:5px 9px;border-radius:12px;background:var(--s1);border:1px solid var(--peri);font-size:12px;font-weight:700;white-space:nowrap}
+.pin.on{background:var(--primary);border-color:#fff}
+.bubble{max-width:78%;padding:10px 14px;border-radius:18px;font-size:14.5px;line-height:1.4}
+.bubble.in{background:var(--s1);align-self:flex-start;border-bottom-left-radius:6px}
+.bubble.out{background:var(--primary);color:#fff;align-self:flex-end;border-bottom-right-radius:6px}
+.composer{flex:none;display:flex;gap:8px;padding:10px 14px 12px;background:var(--navy);border-top:1px solid var(--line)}
+.composer input{flex:1;height:46px;border-radius:23px;background:var(--s1);border:1px solid var(--line);padding:0 16px;outline:none}
+.send{width:46px;height:46px;border-radius:50%;background:var(--primary);display:grid;place-items:center;color:#fff}
+.step{display:flex;gap:6px;margin:0 20px 16px}
+.step i{flex:1;height:5px;border-radius:3px;background:var(--line)}
+.step i.on{background:var(--primary)}
+.timeline{position:relative;padding-left:26px}
+.timeline .tl{position:relative;padding:0 0 18px}
+.timeline .tl::before{content:"";position:absolute;left:-20px;top:4px;width:12px;height:12px;border-radius:50%;border:2px solid var(--line);background:var(--navy)}
+.timeline .tl::after{content:"";position:absolute;left:-15px;top:18px;bottom:0;width:2px;background:var(--line)}
+.timeline .tl:last-child::after{display:none}
+.timeline .tl.done::before{background:var(--mint);border-color:var(--mint)}
+.timeline .tl.now::before{border-color:var(--amber);background:var(--amber)}
+.stars{display:flex;gap:6px}
+.stars button{font-size:30px;color:var(--line)}
+.stars button.on{color:var(--amber)}
+.ring{width:150px;height:150px;margin:6px auto 10px;position:relative}
+.ring b{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--head);font-size:40px;font-weight:500}
+.slot{border:1px solid var(--line);border-radius:14px;padding:10px;text-align:center;font-size:13px}
+.slot.on{border-color:var(--amber);background:rgba(246,198,103,.15)}
+.slot b{display:block;font-size:15px}
+.qr{width:150px;height:150px;background:#fff;border-radius:12px;padding:10px;margin:8px auto}
+.range2{position:relative;height:30px}
+.range2 input{position:absolute;inset:0;width:100%;pointer-events:none;appearance:none;-webkit-appearance:none;background:none;margin:0}
+.range2 input::-webkit-slider-thumb{pointer-events:auto;-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:#fff;cursor:pointer}
+.range2 input::-moz-range-thumb{pointer-events:auto;width:24px;height:24px;border-radius:50%;background:#fff;border:0;cursor:pointer}
+.range2 .track{position:absolute;left:0;right:0;top:12px;height:6px;border-radius:3px;background:var(--line)}
+.range2 .fill{position:absolute;top:12px;height:6px;border-radius:3px;background:var(--primary)}
+.lvl{width:46px;height:46px;border-radius:50%;background:var(--s1);border:1px solid var(--line);font-weight:700}
+.lvl.on{background:var(--primary);border-color:var(--primary)}
+.acc{border-bottom:1px solid var(--line);padding:14px 0}
+.acc summary{font-weight:600;cursor:pointer;list-style:none}
+.acc p{color:var(--muted);font-size:14px;line-height:1.5;margin:8px 0 0}
+
+/* web adjustments */
+.web .pad{padding:0}
+.web .top{display:none}
+.web .hide-web{display:none!important}
+.web .wgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+.web .split{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:22px;align-items:start}
+.web .deck{max-width:420px;margin:0 auto}
+.show-web{display:none}
+.web .show-web{display:block}
+
+@media (max-width:860px){
+  .stage{padding:0;display:block}
+  .panel{display:none}
+  .phone{width:100%;height:100vh;height:100dvh;border-radius:0;padding:0;box-shadow:none}
+  .screen{border-radius:0}
+  .notch{display:none}
+  .browser{width:100%;height:100vh;border-radius:0}
+  .side{display:none}
+  .fab{display:flex;position:fixed;right:14px;bottom:calc(96px + env(safe-area-inset-bottom,0px));z-index:100;gap:6px;background:rgba(6,5,26,.9);border:1px solid #2E2A8A;border-radius:22px;padding:5px}
+  .fab button{padding:8px 11px;border-radius:16px;font-size:12px;font-weight:600;color:#B9BBE6}
+  .fab button.on{background:#5A63E8;color:#fff}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="https://cdn.jsdelivr.net/npm/htm@3.1.1/preact/standalone.umd.js"></script>
+<script>
+const {html, render, useState, useEffect, useRef} = htmPreact;
+
+/* ================= ART ================= */
+const enc = s => 'data:image/svg+xml;utf8,' + encodeURIComponent(s);
+const PALS = [
+  {wall:'#EADCCB', wall2:'#F4EADF', floor:'#B98D68', acc:'#5B5FC7', acc2:'#3F43A8', soft:'#F2B880'},
+  {wall:'#D9E4EF', wall2:'#EAF1F8', floor:'#9C8D7E', acc:'#3E8A73', acc2:'#2C6B58', soft:'#F6C667'},
+  {wall:'#E9DFEA', wall2:'#F5EEF5', floor:'#A57E64', acc:'#B85C5C', acc2:'#8E4242', soft:'#8CB5E8'},
+  {wall:'#E3E6D8', wall2:'#F0F2E8', floor:'#8E7660', acc:'#4A6FA5', acc2:'#34548A', soft:'#E8A87C'}
+];
+function skyline(x,y,w,h){
+  return `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="url(#sky)"/>
+  <g fill="#6B79B8" opacity=".75">
+   <rect x="${x+8}" y="${y+h*.55}" width="${w*.12}" height="${h*.45}"/><rect x="${x+w*.22}" y="${y+h*.35}" width="${w*.1}" height="${h*.65}"/>
+   <rect x="${x+w*.62}" y="${y+h*.45}" width="${w*.14}" height="${h*.55}"/><rect x="${x+w*.8}" y="${y+h*.6}" width="${w*.16}" height="${h*.4}"/>
+  </g>
+  <g fill="#4F5A9C"><rect x="${x+w*.45-1.5}" y="${y+h*.3}" width="3" height="${h*.7}"/><circle cx="${x+w*.45}" cy="${y+h*.28}" r="${Math.max(4,w*.05)}" fill="#F6C667"/></g>`;
+}
+function skyDef(){return `<linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8EC5FF"/><stop offset="1" stop-color="#FFD7A8"/></linearGradient>`;}
+function room(kind, v=0){
+  const p = PALS[v%4];
+  const head = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice"><defs>${skyDef()}<linearGradient id="wl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${p.wall2}"/><stop offset="1" stop-color="${p.wall}"/></linearGradient><linearGradient id="fl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${p.floor}"/><stop offset="1" stop-color="#6E5240"/></linearGradient></defs>`;
+  const floorRoom = `<rect width="400" height="215" fill="url(#wl)"/><rect y="215" width="400" height="85" fill="url(#fl)"/><g stroke="#000" stroke-opacity=".08">${[0,1,2,3,4,5,6,7].map(i=>`<line x1="${i*55}" y1="215" x2="${i*55-30}" y2="300"/>`).join('')}</g><rect y="211" width="400" height="5" fill="#fff" opacity=".6"/>`;
+  let b='';
+  if(kind==='living'){
+    b = floorRoom + `<rect x="236" y="36" width="134" height="118" rx="4" fill="#fff"/>${skyline(242,42,122,106)}<rect x="300" y="42" width="3" height="106" fill="#fff"/><rect x="242" y="93" width="122" height="3" fill="#fff"/>
+    <rect x="224" y="28" width="20" height="150" rx="6" fill="${p.soft}" opacity=".85"/><rect x="362" y="28" width="20" height="150" rx="6" fill="${p.soft}" opacity=".85"/>
+    <rect x="58" y="58" width="78" height="56" rx="3" fill="#fff"/><rect x="63" y="63" width="68" height="46" fill="${p.soft}"/><circle cx="83" cy="80" r="9" fill="#fff" opacity=".8"/><path d="M63 109 L90 88 L108 100 L131 84 L131 109Z" fill="${p.acc}" opacity=".7"/>
+    <ellipse cx="160" cy="268" rx="130" ry="20" fill="${p.acc2}" opacity=".25"/>
+    <rect x="34" y="150" width="200" height="44" rx="16" fill="${p.acc2}"/><rect x="26" y="168" width="216" height="52" rx="16" fill="${p.acc}"/><rect x="48" y="160" width="80" height="34" rx="10" fill="${p.acc}" opacity=".9"/><rect x="136" y="160" width="80" height="34" rx="10" fill="${p.acc}" opacity=".9"/>
+    <rect x="40" y="218" width="6" height="16" fill="#3a2a20"/><rect x="222" y="218" width="6" height="16" fill="#3a2a20"/>
+    <rect x="66" y="166" width="26" height="22" rx="6" fill="${p.soft}"/>
+    <rect x="120" y="232" width="96" height="10" rx="4" fill="#5a4030"/><rect x="128" y="242" width="5" height="20" fill="#5a4030"/><rect x="203" y="242" width="5" height="20" fill="#5a4030"/><rect x="150" y="222" width="22" height="10" rx="2" fill="#fff"/>
+    <rect x="262" y="236" width="28" height="30" rx="5" fill="#D9774F"/><ellipse cx="270" cy="218" rx="14" ry="22" fill="#3E8A55"/><ellipse cx="286" cy="214" rx="12" ry="26" fill="#4FA066"/><ellipse cx="276" cy="200" rx="9" ry="18" fill="#2F7444"/>
+    <rect x="330" y="150" width="4" height="110" fill="#333"/><path d="M314 150 L350 150 L342 126 L322 126Z" fill="${p.soft}"/><ellipse cx="332" cy="262" rx="18" ry="5" fill="#333"/>`;
+  } else if(kind==='bedroom'||kind==='dorm'){
+    const two = kind==='dorm';
+    b = floorRoom + `<rect x="280" y="40" width="96" height="96" rx="4" fill="#fff"/>${skyline(286,46,84,84)}<rect x="326" y="46" width="3" height="84" fill="#fff"/>
+    <rect x="40" y="70" width="110" height="6" rx="2" fill="#7a5a44"/><rect x="48" y="50" width="10" height="20" fill="${p.acc}"/><rect x="60" y="54" width="8" height="16" fill="${p.soft}"/><rect x="70" y="48" width="12" height="22" fill="${p.acc2}"/><ellipse cx="120" cy="62" rx="10" ry="9" fill="#4FA066"/>
+    ${[two?0:null, 1].filter(x=>x!==null).map((k,i)=>{const x= two? (i===0?20:200): 70; const w= two?150:210; return `
+      <rect x="${x}" y="118" width="${w}" height="70" rx="10" fill="${p.acc2}"/>
+      <rect x="${x-6}" y="172" width="${w+12}" height="46" rx="10" fill="#fff"/>
+      <rect x="${x-6}" y="190" width="${w+12}" height="40" rx="10" fill="${p.acc}"/>
+      <rect x="${x+14}" y="152" width="${w*.36}" height="26" rx="10" fill="#F8F6F2"/><rect x="${x+w*.52}" y="152" width="${w*.36}" height="26" rx="10" fill="#F8F6F2"/>
+      <rect x="${x-2}" y="228" width="6" height="14" fill="#3a2a20"/><rect x="${x+w-4}" y="228" width="6" height="14" fill="#3a2a20"/>`;}).join('')}
+    ${two?'':`<rect x="298" y="176" width="54" height="56" rx="6" fill="#8a6a50"/><rect x="304" y="196" width="42" height="3" fill="#6a4a36"/><rect x="318" y="150" width="4" height="26" fill="#333"/><path d="M306 152 L334 152 L328 134 L312 134Z" fill="${p.soft}"/>`}
+    <ellipse cx="200" cy="274" rx="120" ry="14" fill="${p.soft}" opacity=".35"/>`;
+  } else if(kind==='kitchen'){
+    b = `<rect width="400" height="300" fill="url(#wl)"/><rect y="250" width="400" height="50" fill="url(#fl)"/>
+    <rect x="150" y="34" width="110" height="80" rx="4" fill="#fff"/>${skyline(156,40,98,68)}<rect x="203" y="40" width="3" height="68" fill="#fff"/>
+    <g fill="${p.acc}"><rect x="10" y="40" width="64" height="72" rx="4"/><rect x="78" y="40" width="64" height="72" rx="4"/><rect x="268" y="40" width="58" height="72" rx="4"/></g>
+    <g fill="#fff" opacity=".5"><rect x="38" y="70" width="8" height="2"/><rect x="106" y="70" width="8" height="2"/><rect x="293" y="70" width="8" height="2"/></g>
+    <rect x="0" y="150" width="400" height="10" fill="#E8E2DA"/>
+    <g stroke="#000" stroke-opacity=".06">${[0,1,2,3,4,5,6,7,8,9,10].map(i=>`<line x1="${i*36}" y1="112" x2="${i*36}" y2="150"/>`).join('')}<line x1="0" y1="131" x2="400" y2="131"/></g>
+    <rect x="0" y="160" width="330" height="90" fill="${p.acc2}"/><g stroke="#000" stroke-opacity=".2"><line x1="82" y1="160" x2="82" y2="250"/><line x1="164" y1="160" x2="164" y2="250"/><line x1="246" y1="160" x2="246" y2="250"/></g>
+    <rect x="176" y="146" width="60" height="6" rx="3" fill="#bbb"/><path d="M200 146 v-18 h14" stroke="#999" stroke-width="4" fill="none"/>
+    <rect x="30" y="144" width="70" height="6" rx="2" fill="#333"/><circle cx="48" cy="140" r="8" fill="#444"/><circle cx="80" cy="140" r="8" fill="#444"/>
+    <rect x="336" y="60" width="58" height="190" rx="6" fill="#E9ECEF"/><line x1="336" y1="130" x2="394" y2="130" stroke="#C9CDD2" stroke-width="2"/><rect x="384" y="80" width="4" height="30" rx="2" fill="#AAB0B6"/><rect x="384" y="140" width="4" height="40" rx="2" fill="#AAB0B6"/>
+    <line x1="120" y1="0" x2="120" y2="22" stroke="#333" stroke-width="2"/><path d="M106 22 h28 l-6 14 h-16z" fill="${p.soft}"/><line x1="290" y1="0" x2="290" y2="22" stroke="#333" stroke-width="2"/><path d="M276 22 h28 l-6 14 h-16z" fill="${p.soft}"/>
+    <ellipse cx="270" cy="140" rx="10" ry="12" fill="#E85D4A"/><ellipse cx="256" cy="142" rx="8" ry="10" fill="#F6C667"/>`;
+  } else if(kind==='bath'){
+    b = `<defs><pattern id="tl" width="30" height="30" patternUnits="userSpaceOnUse"><rect width="30" height="30" fill="${p.wall2}"/><path d="M30 0 V30 H0" fill="none" stroke="#000" stroke-opacity=".07"/></pattern></defs>
+    <rect width="400" height="300" fill="url(#tl)"/><rect y="250" width="400" height="50" fill="#9AA6B8"/>
+    <rect x="20" y="170" width="200" height="80" rx="18" fill="#fff"/><rect x="20" y="170" width="200" height="14" rx="7" fill="#EDEFF3"/><rect x="190" y="120" width="6" height="50" fill="#bbb"/><path d="M196 122 h20" stroke="#bbb" stroke-width="5"/>
+    <rect x="30" y="20" width="4" height="150" fill="#ccc"/><path d="M34 24 h100 v130 q-50 10 -100 0z" fill="${p.acc}" opacity=".55"/>
+    <rect x="262" y="40" width="96" height="110" rx="48" fill="#DCE7F2" stroke="#fff" stroke-width="5"/><path d="M280 70 l30 -20" stroke="#fff" stroke-width="5" opacity=".7"/>
+    <rect x="250" y="160" width="120" height="16" rx="6" fill="#fff"/><rect x="270" y="176" width="80" height="74" rx="6" fill="${p.acc2}"/><rect x="306" y="146" width="6" height="14" fill="#bbb"/>
+    <rect x="374" y="120" width="18" height="90" rx="4" fill="${p.soft}"/>
+    <rect x="232" y="220" width="18" height="30" rx="4" fill="#D9774F"/><ellipse cx="241" cy="206" rx="10" ry="18" fill="#4FA066"/>`;
+  } else { // exterior
+    b = `<defs><linearGradient id="dusk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6E86E8"/><stop offset=".6" stop-color="#F3B6A0"/><stop offset="1" stop-color="#FFD9A8"/></linearGradient></defs>
+    <rect width="400" height="300" fill="url(#dusk)"/>
+    <g fill="#8C97D6" opacity=".7"><rect x="10" y="150" width="40" height="100"/><rect x="330" y="130" width="50" height="120"/></g>
+    <g fill="#5E68B0"><rect x="290" y="96" width="3" height="154"/><circle cx="291.5" cy="92" r="9" fill="#F6C667"/></g>
+    <rect x="70" y="40" width="${150+v*8}" height="230" fill="${['#EDE6F2','#E7EEF5','#F2E6DC','#E8EEE2'][v%4]}"/><rect x="70" y="40" width="${150+v*8}" height="10" fill="${p.acc}"/>
+    ${Array.from({length:8}).map((_,r)=>Array.from({length:5}).map((_,c)=>`<rect x="${82+c*28}" y="${60+r*25}" width="18" height="15" rx="2" fill="${(r*5+c+v)%4===0?'#F6C667':'#9FB2D6'}"/>`).join('')).join('')}
+    <rect x="${120+v*4}" y="240" width="40" height="30" fill="${p.acc2}"/>
+    <rect y="268" width="400" height="32" fill="#7D8A6E"/><rect y="268" width="400" height="6" fill="#9AAA88"/>
+    <g fill="#3E7D52"><circle cx="40" cy="250" r="22"/><circle cx="252" cy="248" r="24"/><circle cx="360" cy="252" r="20"/></g>`;
+  }
+  return enc(head + b + '</svg>');
+}
+const LOOKS = {
+  aruzhan:{skin:'#E8B98F',hair:'long',hc:'#2B1B14',shirt:'#5A63E8',bg:'#C3A6F7'},
+  dana:{skin:'#F0C7A0',hair:'bun',hc:'#3B2418',shirt:'#3E8A73',bg:'#8CB5E8'},
+  timur:{skin:'#D9A47A',hair:'short',hc:'#1D1410',shirt:'#B85C5C',bg:'#F6C667'},
+  aliya:{skin:'#EBC09A',hair:'long',hc:'#5A3A22',shirt:'#F2B880',bg:'#6FD6A0'},
+  nurlan:{skin:'#C98F68',hair:'curly',hc:'#140E0B',shirt:'#4A6FA5',bg:'#FF8A80'},
+  aigerim:{skin:'#F3CDA8',hair:'bob',hc:'#2A1A12',shirt:'#8A5BD6',bg:'#F6C667'},
+  arman:{skin:'#D6A07A',hair:'short',hc:'#3A2A1E',shirt:'#2C6B58',bg:'#8C9EFF'},
+  zhanel:{skin:'#EFC4A0',hair:'long',hc:'#1A1210',shirt:'#E85D4A',bg:'#8CB5E8'},
+  ali:{skin:'#D4A27C',hair:'short',hc:'#120D0A',shirt:'#34548A',bg:'#6FD6A0'},
+  mira:{skin:'#F1C9A6',hair:'bun',hc:'#6B4428',shirt:'#B85C5C',bg:'#C3A6F7'},
+  serik:{skin:'#CF9A72',hair:'short',hc:'#55473F',shirt:'#3E8A73',bg:'#6FD6A0'},
+  gulnara:{skin:'#EBC1A0',hair:'bob',hc:'#3B2418',shirt:'#5B5FC7',bg:'#F2B880'}
+};
+function face(id){
+  const L = LOOKS[id]||LOOKS.aruzhan;
+  const hair = {
+    long:`<path d="M26 52 Q24 24 50 22 Q76 24 74 52 L76 82 L64 70 L36 70 L24 82Z" fill="${L.hc}"/>`,
+    bun:`<circle cx="50" cy="18" r="10" fill="${L.hc}"/><path d="M28 48 Q28 26 50 26 Q72 26 72 48 Q64 34 50 34 Q36 34 28 48Z" fill="${L.hc}"/>`,
+    short:`<path d="M28 46 Q28 24 50 24 Q72 24 72 46 Q66 34 52 34 Q36 34 28 46Z" fill="${L.hc}"/>`,
+    curly:`<g fill="${L.hc}"><circle cx="34" cy="34" r="10"/><circle cx="46" cy="27" r="11"/><circle cx="60" cy="28" r="10"/><circle cx="68" cy="38" r="9"/><circle cx="30" cy="44" r="7"/></g>`,
+    bob:`<path d="M26 60 Q22 24 50 23 Q78 24 74 60 L66 60 Q68 36 50 34 Q32 36 34 60Z" fill="${L.hc}"/>`
+  }[L.hair];
+  const back = L.hair==='long' ? hair : '';
+  return enc(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="${L.bg}"/>${back}<path d="M18 100 Q20 76 50 74 Q80 76 82 100Z" fill="${L.shirt}"/><rect x="43" y="60" width="14" height="16" fill="${L.skin}"/><ellipse cx="50" cy="48" rx="20" ry="23" fill="${L.skin}"/>${L.hair==='long'?`<path d="M30 46 Q30 28 50 28 Q70 28 70 46 Q62 36 50 36 Q38 36 30 46Z" fill="${L.hc}"/>`:hair}<circle cx="42" cy="50" r="2.2" fill="#2a1a12"/><circle cx="58" cy="50" r="2.2" fill="#2a1a12"/><path d="M43 60 Q50 65 57 60" stroke="#8a4a3a" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="37" cy="57" r="3.5" fill="#E88A7A" opacity=".35"/><circle cx="63" cy="57" r="3.5" fill="#E88A7A" opacity=".35"/></svg>`);
+}
+function qrArt(){let s='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 29 29" shape-rendering="crispEdges"><rect width="29" height="29" fill="#fff"/>';let seed=7;const r=()=>{seed=(seed*9301+49297)%233280;return seed/233280};for(let y=0;y<29;y++)for(let x=0;x<29;x++){const f=(x<8&&y<8)||(x>20&&y<8)||(x<8&&y>20);if(f){const fx=x>20?x-21:x,fy=y>20?y-21:y;const ring=fx===0||fx===6||fy===0||fy===6||(fx>=2&&fx<=4&&fy>=2&&fy<=4);if(ring&&fx<7&&fy<7)s+=`<rect x="${x}" y="${y}" width="1" height="1" fill="#0B0A2E"/>`;}else if(r()>.52)s+=`<rect x="${x}" y="${y}" width="1" height="1" fill="#0B0A2E"/>`;}return enc(s+'</svg>');}
+function mapArt(w=360,h=250){
+  return `<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg"><rect width="${w}" height="${h}" fill="#141E46"/>
+  <path d="M-10 ${h*.78} C ${w*.25} ${h*.62}, ${w*.45} ${h*.95}, ${w*.7} ${h*.72} S ${w*1.05} ${h*.6}, ${w+10} ${h*.66}" stroke="#2B4F8F" stroke-width="16" fill="none"/>
+  <g stroke="#26336A" stroke-width="3">${Array.from({length:7}).map((_,i)=>`<line x1="0" y1="${i*h/6}" x2="${w}" y2="${i*h/6+12}"/>`).join('')}${Array.from({length:8}).map((_,i)=>`<line x1="${i*w/7}" y1="0" x2="${i*w/7-14}" y2="${h}"/>`).join('')}</g>
+  <g stroke="#34417E" stroke-width="7"><line x1="0" y1="${h*.38}" x2="${w}" y2="${h*.32}"/><line x1="${w*.56}" y1="0" x2="${w*.5}" y2="${h}"/></g>
+  <g fill="#1F4A3A"><rect x="${w*.08}" y="${h*.1}" width="${w*.14}" height="${h*.16}" rx="8"/><rect x="${w*.72}" y="${h*.08}" width="${w*.18}" height="${h*.14}" rx="8"/><circle cx="${w*.3}" cy="${h*.55}" r="${h*.08}"/></g>
+  <text x="${w*.08}" y="${h*.9}" fill="#5C7BC0" font-size="11" font-family="Onest,sans-serif">Esil river</text></svg>`;
+}
+
+/* ================= DATA ================= */
+const PEOPLE = {
+  dana:{name:'Dana',age:19,uni:'AITU',major:'Software Engineering',year:2,sleep:0,clean:5,smoke:'no',guests:0,pets:'ok',budget:[70,90],likesYou:true,langs:['Kazakh','Russian','English'],bio:'Early riser, gym at 7, quiet evenings with a book.'},
+  aigerim:{name:'Aigerim',age:20,uni:'AITU',major:'Media Technologies',year:3,sleep:0,clean:4,smoke:'no',guests:1,pets:'has',budget:[60,85],likesYou:true,langs:['Kazakh','English'],bio:'I have a calm cat named Baursak. Love cooking on weekends.'},
+  nurlan:{name:'Nurlan',age:21,uni:'ENU',major:'Economics',year:3,sleep:1,clean:2,smoke:'outside',guests:1,pets:'ok',budget:[50,70],likesYou:false,langs:['Russian','Kazakh'],bio:'Football on Saturdays, chill the rest of the week.'},
+  zhanel:{name:'Zhanel',age:18,uni:'AITU',major:'Cybersecurity',year:1,sleep:1,clean:4,smoke:'no',guests:0,pets:'none',budget:[60,80],likesYou:false,langs:['Kazakh','Russian'],bio:'First year, looking for a tidy and friendly flatmate.'},
+  arman:{name:'Arman',age:22,uni:'Nazarbayev University',major:'Robotics',year:4,sleep:2,clean:3,smoke:'yes',guests:2,pets:'ok',budget:[80,120],likesYou:true,langs:['Russian','English'],bio:'Night owl, building robots till 2 am.'},
+  timur:{name:'Timur',age:20,uni:'AITU',major:'Big Data',year:2,sleep:2,clean:3,smoke:'no',guests:2,pets:'ok',budget:[60,90],likesYou:true,langs:['Kazakh','Russian','English'],bio:'Board games night every Friday, friends welcome.'},
+  aliya:{name:'Aliya',age:19,uni:'AITU',major:'IT Management',year:2,sleep:0,clean:4,smoke:'no',guests:1,pets:'ok',budget:[45,70],likesYou:true,langs:['Kazakh','English'],bio:'Volunteer, early bird, tea lover.'},
+  ali:{name:'Ali',age:20,uni:'AITU',major:'Software Engineering',year:2,sleep:2,clean:4,smoke:'no',guests:1,pets:'ok',budget:[60,90],langs:['Kazakh','Russian'],bio:'Gamer and backend developer.'},
+  mira:{name:'Mira',age:19,uni:'AITU',major:'Computer Science',year:2,sleep:0,clean:5,smoke:'no',guests:0,pets:'ok',budget:[60,85],langs:['Kazakh','English'],bio:'Designer, plants everywhere.'}
+};
+const SLEEP=['Before 23:00','23:00–01:00','After 01:00'], GUESTS=['Rarely','Weekends','Often'];
+const SMOKE={no:'Non-smoker',yes:'Smoker',outside:'Smokes outside'}, PETS={none:'No pets please',ok:'OK with pets',has:'Has a pet'};
+const LANDLORDS = {
+  serik:{name:'Serik B.',since:2023,rating:4.8,reviews:23,verified:true,bio:'I rent two flats near AITU. Students are my favourite tenants: quiet and on time.'},
+  gulnara:{name:'Gulnara K.',since:2021,rating:4.6,reviews:41,verified:true,bio:'Family-run rentals in Esil district since 2021.'},
+  dauren:{name:'Dauren S.',since:2026,rating:0,reviews:0,verified:false,bio:'New on Campus Nest.'}
+};
+const LISTINGS = [
+  {id:'l1',title:'2-room flat near AITU',type:'Apartment',addr:'Kabanbay Batyr 53',dist:1.2,price:85000,area:54,floor:'4 / 9',rooms:2,cond:'Renovated 2024',pets:false,promoted:true,verified:true,ll:'serik',photos:[['exterior',0],['living',0],['bedroom',0],['kitchen',0],['bath',0]],req:{rating:4,years:1,sid:true,trust:60},desc:'Bright flat a 5-minute walk from AITU. Washing machine, dishwasher, fast Wi-Fi, quiet building with a guard.',mx:.62,my:.38},
+  {id:'l2',title:'Room in a 3-room flat',type:'Room',addr:'Turan 24',dist:0.8,price:45000,area:14,floor:'7 / 12',rooms:1,cond:'Good',pets:true,promoted:false,verified:true,ll:'gulnara',photos:[['bedroom',1],['living',1],['kitchen',1],['bath',1]],req:{rating:3.5,years:0,sid:true,trust:50},desc:'Private room with a desk. Shared kitchen with two calm students.',mx:.48,my:.5},
+  {id:'l3',title:'Studio with a city view',type:'Studio',addr:'Mangilik El 20',dist:1.9,price:70000,area:32,floor:'15 / 22',rooms:1,cond:'New building',pets:false,promoted:false,verified:true,ll:'gulnara',photos:[['exterior',1],['living',2],['kitchen',2],['bath',2]],req:{rating:4,years:0,sid:true,trust:55},desc:'Compact studio with a panoramic window and a view of Baiterek.',mx:.3,my:.25},
+  {id:'l4',title:'3-room flat for a group',type:'Apartment',addr:'Syganak 18',dist:2.0,price:120000,area:76,floor:'3 / 9',rooms:3,cond:'Good',pets:true,promoted:false,verified:true,ll:'serik',photos:[['exterior',2],['living',3],['bedroom',2],['bedroom',3],['kitchen',3],['bath',3]],req:{rating:4,years:1,sid:true,trust:60},desc:'Three separate bedrooms, big kitchen and two balconies. Perfect for 3–4 students.',mx:.78,my:.6},
+  {id:'l5',title:'Dorm bed on AITU campus',type:'Dormitory',addr:'Mangilik El 55/11',dist:0.2,price:35000,area:18,floor:'2 / 5',rooms:1,cond:'Good',pets:false,promoted:false,verified:true,ll:'gulnara',photos:[['dorm',0],['kitchen',0],['bath',1]],req:{rating:0,years:0,sid:true,trust:0},desc:'Bed in a two-person room. Gender policy: female block. Curfew 23:30, meals included.',mx:.55,my:.44},
+  {id:'l6',title:'2-room flat, quiet yard',type:'Apartment',addr:'Kerey Zhanibek 9',dist:3.1,price:78000,area:50,floor:'5 / 5',rooms:2,cond:'Needs light repair',pets:true,promoted:false,verified:false,ll:'dauren',photos:[['exterior',3],['living',1],['bedroom',1]],req:{rating:0,years:0,sid:false,trust:0},desc:'Older building, quiet green yard. Landlord is not verified yet.',mx:.18,my:.7}
+];
+const fmt = n => n.toLocaleString('ru-RU').replace(/,/g,' ');
+const kzt = n => fmt(n) + ' KZT';
+
+/* ================= STORE ================= */
+let ST = {
+  role:'student', device:'phone', stack:{student:[{id:'P0'}], landlord:[{id:'L0'}]},
+  me:{name:'Aruzhan',sleep:0,clean:4,smoke:'no',guests:0,pets:'ok',budget:[60,90],dealbreakers:['smoking'],langs:['Kazakh','Russian','English']},
+  wmul:{sleep:1,clean:1,smoke:1,guests:1,pets:1,budget:1}, notImp:{}, learned:false,
+  deck:['dana','aigerim','nurlan','zhanel','arman'], swiped:{}, matches:['timur','aliya'],
+  group:{name:'Dorm 5 crew',members:['me','ali','mira']},
+  chats:{dana:[],timur:[{f:'them',t:'Hey! Saw we matched. Board games on Friday?'}],aliya:[{f:'them',t:'Hi Aruzhan, are you still looking?'}],group:[{f:'mira',t:'Found a nice 2-room flat on Kabanbay Batyr!'},{f:'ali',t:'Looks good, but it is 85k. Split by four?'}],serik:[{f:'them',t:'Hello! The viewing on Saturday at 14:00 works for me.'}],'L:dorm':[{f:'mira',t:'Hello Serik! We are four AITU students and booked Saturday 14:00.'}],'L:timur':[{f:'them',t:'Hi! I have a calm cat. Is that OK for the 3-room flat?'}]},
+  unread:{timur:1,aliya:1,group:2},
+  saved:{l1:true}, filters:{verified:true,maxPrice:120000,type:'Any',pets:false,q:''},
+  viewing:{l1:'Sat 14:00'},
+  app:null, contract:null, lease:null,
+  trust:{score:68,docs:[{name:'Stipend certificate.pdf',status:'Approved'}],rent:[]},
+  checkin:{photos:{},done:false,dispute:null},
+  notifs:[{t:'Dana liked you back',s:'It is a match, say hi',go:'S1.3',read:false},{t:'Viewing confirmed',s:'Sat 14:00, Kabanbay Batyr 53',go:'S2.3',p:{id:'l1'},read:false},{t:'AI found a risk in your group',s:'Sleep timing: check the group profile',go:'S3.2',read:true}],
+  security:{tfa:true,sessions:[{d:'iPhone 15, Astana',now:true},{d:'Chrome on Windows, Astana'},{d:'iPad, Almaty'}]},
+  nset:{matches:true,messages:true,applications:true,rent:true,marketing:false},
+  profile:{verified:true,uni:'AITU',faculty:'Software Engineering',course:2,bio:'Quiet, tidy, loves early mornings and long walks along Esil.'},
+  // landlord
+  ll:{wallet:12400,refreshAt:0,promo:{},listings:['l1','l4'],mine:[],apps:null,slots:['Sat 14:00','Sun 11:00','Mon 18:30'],verified:true,leaseConfirmed:[]},
+  sheet:null, toast:null, lb:null, ext:null, onb:{step:0,role:'student',codes:false,tfa:false,card:null}
+};
+const subs = new Set();
+function set(fn){ fn(ST); ST = {...ST}; subs.forEach(f=>f()); }
+let toastT;
+function toast(msg){ clearTimeout(toastT); set(s=>{s.toast=msg}); toastT=setTimeout(()=>set(s=>{s.toast=null}),2400); }
+const cur = () => { const st = ST.stack[ST.role]; return st[st.length-1]; };
+function nav(id,p={}){ set(s=>{ const r = SCREENS[id]?.role; if(r && r!=='any' && r!==s.role){ s.role=r; } s.stack[s.role].push({id,p}); s.sheet=null; }); scrollTop(); }
+function root(id){ set(s=>{ s.stack[s.role]=[{id}]; s.sheet=null; }); scrollTop(); }
+function back(){ set(s=>{ const st=s.stack[s.role]; if(st.length>1) st.pop(); s.sheet=null; }); scrollTop(); }
+function sheet(type,p={}){ set(s=>{ s.sheet={type,p}; }); }
+function closeSheet(){ set(s=>{ s.sheet=null; }); }
+function scrollTop(){ requestAnimationFrame(()=>document.querySelectorAll('.body,.wbody').forEach(e=>e.scrollTop=0)); }
+function switchRole(r){ set(s=>{ s.role=r; s.sheet=null; }); scrollTop(); }
+
+/* ================= MATCHING (AI mock) ================= */
+const BASEW = {sleep:1.2,clean:1,smoke:1.3,guests:1,pets:.6,budget:1};
+function sims(a,b){
+  const ov = Math.max(0, Math.min(a.budget[1],b.budget[1]) - Math.max(a.budget[0],b.budget[0]));
+  const rng = Math.min(a.budget[1]-a.budget[0], b.budget[1]-b.budget[0]) || 1;
+  return {
+    sleep: 1 - Math.abs(a.sleep-b.sleep)/2,
+    clean: 1 - Math.abs(a.clean-b.clean)/4,
+    smoke: a.smoke===b.smoke ? 1 : (a.smoke==='outside'||b.smoke==='outside') ? .5 : 0,
+    guests: 1 - Math.abs(a.guests-b.guests)/2,
+    pets: ((a.pets==='none'&&b.pets==='has')||(a.pets==='has'&&b.pets==='none')) ? 0 : 1,
+    budget: Math.min(1, ov/rng)
+  };
+}
+function weights(){ const w={}; for(const k in BASEW) w[k]=BASEW[k]*ST.wmul[k]*(ST.notImp[k]?.25:1); return w; }
+function score(a,b){ const s=sims(a,b), w=weights(); let n=0,d=0; for(const k in s){n+=s[k]*w[k];d+=w[k];} return Math.round(50+50*n/d); }
+const person = id => id==='me' ? ST.me : PEOPLE[id];
+function reason(id){
+  const p=PEOPLE[id], s=sims(ST.me,p), w=weights();
+  const good = Object.keys(s).filter(k=>s[k]>=.8).sort((x,y)=>w[y]-w[x]);
+  const bad = Object.keys(s).filter(k=>s[k]<.5).sort((x,y)=>w[y]*(1-s[y])-w[x]*(1-s[x]));
+  const txt = {sleep:p.sleep===0?'an early sleeper like you':p.sleep===2?'a night owl like you':'on the same sleep schedule',clean:`tidy (${p.clean}/5), close to your ${ST.me.clean}/5`,smoke:'a non-smoker',guests:`${GUESTS[p.guests].toLowerCase()} has guests, like you`,pets:'fine with pets',budget:`in your budget (${p.budget[0]}–${p.budget[1]}k)`};
+  const badT = {sleep:`sleeps ${SLEEP[p.sleep].toLowerCase()}, you sleep ${SLEEP[ST.me.sleep].toLowerCase()}`,clean:`cleanliness ${p.clean}/5 vs your ${ST.me.clean}/5`,smoke:`${SMOKE[p.smoke].toLowerCase()}`,guests:`has guests ${GUESTS[p.guests].toLowerCase()}, you prefer ${GUESTS[ST.me.guests].toLowerCase()}`,pets:'pets do not fit',budget:`budget ${p.budget[0]}–${p.budget[1]}k barely overlaps yours`};
+  let main = good.length ? `${p.name} is ${txt[good[0]]}${good[1]?` and ${txt[good[1]]}`:''}.` : `${p.name} differs from you in several habits.`;
+  const top = good[0]||bad[0];
+  if(top && ST.wmul[top]>1.15 && !ST.notImp[top]) main += ` ${({sleep:'Sleep timing',clean:'Cleanliness',smoke:'Smoking',guests:'Guests',pets:'Pets',budget:'Budget'})[top]} matters more to you than to most students, so it weighs more in your score.`;
+  return {main, warn: bad[0] ? badT[bad[0]] : null, warnKey: bad[0], topKey: good[0]};
+}
+function learn(id, liked){
+  const s=sims(ST.me,PEOPLE[id]); let crossed=null;
+  for(const k in s){ if(liked && s[k]>=.8){ const b=ST.wmul[k]; ST.wmul[k]=Math.min(1.6,ST.wmul[k]+.1); if(b<=1.15&&ST.wmul[k]>1.15) crossed=k; } if(!liked && s[k]<.5){ ST.wmul[k]=Math.min(1.6,ST.wmul[k]+.06); } }
+  return crossed;
+}
+function groupStats(){
+  const ids = ST.group.members; const ps = ids.map(person);
+  let tot=0,c=0; for(let i=0;i<ps.length;i++)for(let j=i+1;j<ps.length;j++){tot+=score(ps[i],ps[j]);c++;}
+  const comp = c? Math.round(tot/c) : 100;
+  const early = ps.filter(p=>p.sleep===0).length, late=ps.filter(p=>p.sleep===2).length;
+  let risk=null;
+  if(early>0 && late>0) risk={k:'Sleep timing',t:`${early} of ${ps.length} go to bed before 23:00, ${late} after 01:00. Swipes show sleep matters most to ${Math.max(early,2)} members.`};
+  else { const gs=ps.map(p=>p.guests); if(Math.max(...gs)-Math.min(...gs)>=2) risk={k:'Guests',t:'One member often has guests while others prefer rarely.'}; }
+  const trustAvg = Math.round((ST.trust.score + 74 + 70 + (ids.includes('dana')?73:0)) / (ids.length));
+  return {comp, risk, trustAvg: Math.min(99,trustAvg)};
+}
+</script>
+<script>
+/* ================= ICONS ================= */
+const IP = {
+  home:'<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/>',
+  users:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.3-5.5 6.5-5.5s5.9 1.9 6.5 5.5"/><circle cx="17" cy="9" r="2.6"/><path d="M16 14.6c2.8.1 4.8 1.8 5.5 5"/>',
+  house:'<path d="M4 20V9l8-5 8 5v11z"/><path d="M9 20v-6h6v6"/>',
+  chat:'<path d="M4 5h16v11H9l-5 4z"/>',
+  user:'<circle cx="12" cy="8" r="4"/><path d="M4 21c1-4.4 4.2-6.5 8-6.5s7 2.1 8 6.5"/>',
+  bell:'<path d="M6 16V11a6 6 0 1 1 12 0v5l2 2H4z"/><path d="M10 20a2 2 0 0 0 4 0"/>',
+  back:'<path d="M15 5l-7 7 7 7"/>',
+  heart:'<path d="M12 20s-7.5-4.6-9-9.3C2 7.3 4.3 4.5 7.3 4.5c1.9 0 3.4 1 4.7 2.7 1.3-1.7 2.8-2.7 4.7-2.7 3 0 5.3 2.8 4.3 6.2C19.5 15.4 12 20 12 20z"/>',
+  search:'<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>',
+  sliders:'<path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/>',
+  map:'<path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2z"/><path d="M9 4v14M15 6v14"/>',
+  list:'<path d="M8 6h13M8 12h13M8 18h13"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+  x:'<path d="M6 6l12 12M18 6L6 18"/>',
+  shield:'<path d="M12 3l8 3v6c0 4.5-3.4 8.2-8 9-4.6-.8-8-4.5-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/>',
+  lock:'<rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>',
+  camera:'<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
+  star:'<path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8L3.5 9.7l5.9-.9z"/>',
+  wallet:'<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12.5h2"/><path d="M3 9h18"/>',
+  chart:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+  doc:'<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h6"/>',
+  gear:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/>',
+  out:'<path d="M15 4h4v16h-4"/><path d="M10 8l-4 4 4 4M6 12h10"/>',
+  spark:'<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 16l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7z"/>',
+  cal:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+  send:'<path d="M4 12l16-8-6 16-2.5-6.5z"/>',
+  more:'<circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/>',
+  upload:'<path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v4h16v-4"/>',
+  key:'<circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M17 6l3 3"/>',
+  eye:'<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+  flag:'<path d="M5 21V4h11l-2 4 2 4H5"/>',
+  help:'<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17.5v.1"/>',
+  copy:'<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V4H4v12h4"/>',
+  edit:'<path d="M4 20h4L19 9l-4-4L4 16z"/>',
+  bolt:'<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',
+  pin:'<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>'
+};
+const Ic = (n,s=22,cls='') => html`<svg class=${'icon '+cls} style=${`width:${s}px;height:${s}px`} viewBox="0 0 24 24" dangerouslySetInnerHTML=${{__html:IP[n]}}></svg>`;
+
+/* ================= SMALL COMPONENTS ================= */
+const Av = ({id,size=44}) => html`<div class="av" style=${`width:${size}px;height:${size}px`}><img src=${face(id==='me'?'aruzhan':id)} alt=""/></div>`;
+const pname = id => id==='me' ? 'Aruzhan (you)' : (PEOPLE[id]?.name || LANDLORDS[id]?.name || id);
+const TRUST = {ali:74,mira:70,dana:73,timur:66,aliya:71,aigerim:69,nurlan:58,zhanel:64,arman:61};
+const trustOf = id => id==='me' ? ST.trust.score : (TRUST[id]||65);
+function Top({title,sub,right,noBack}){
+  return html`<div class="top">${!noBack && html`<button class="back" aria-label="Back" onClick=${back}>${Ic('back',20)}</button>`}<div class="grow"><h1>${title}</h1>${sub && html`<div class="sub">${sub}</div>`}</div>${right}</div>`;
+}
+const Sw = ({on,onClick,label}) => html`<button class=${'switch'+(on?' on':'')} role="switch" aria-checked=${on} aria-label=${label||'Toggle'} onClick=${onClick}></button>`;
+function Photo({src,h=110,label,onRemove,imgs,i=0,style=''}){
+  return html`<div class="photo tap" style=${`height:${h}px;${style}`} onClick=${()=>set(s=>{s.lb={imgs:imgs||[src],i}})}><img src=${src} alt=${label||'Photo'}/>${label&&html`<span class="lbl">${label}</span>`}${onRemove&&html`<button class="x" aria-label="Remove photo" onClick=${e=>{e.stopPropagation();onRemove();}}>${Ic('x',14)}</button>`}</div>`;
+}
+function AddPhoto({onFiles,h=110,label='Add photo',multiple=true,accept='image/*'}){
+  return html`<label class="add tap" style=${`height:${h}px`}><input type="file" accept=${accept} multiple=${multiple} onChange=${e=>{const fs=[...e.target.files].map(f=>({src:URL.createObjectURL(f),name:f.name}));if(fs.length)onFiles(fs);e.target.value='';}}/><div>${Ic('camera',24)}<div style="margin-top:4px">${label}</div></div></label>`;
+}
+function Gallery({photos,h=250,round=0}){
+  const [i,setI]=useState(0); const ref=useRef();
+  const srcs = photos.map(photoSrc);
+  return html`<div style=${`position:relative;height:${h}px;border-radius:${round}px;overflow:hidden`}>
+    <div class="gal" ref=${ref} style=${`height:${h}px`} onScroll=${e=>setI(Math.round(e.target.scrollLeft/e.target.clientWidth))}>
+      ${srcs.map((s,k)=>html`<img src=${s} alt=${'Photo '+(k+1)} style=${`height:${h}px;object-fit:cover;cursor:zoom-in`} onClick=${()=>set(st=>{st.lb={imgs:srcs,i:k}})}/>`)}
+    </div>
+    <div class="dots">${srcs.map((_,k)=>html`<i class=${k===i?'on':''}></i>`)}</div>
+    <span class="pill" style="position:absolute;right:12px;bottom:10px;background:rgba(11,10,46,.75);color:#fff">${i+1} / ${srcs.length}</span>
+  </div>`;
+}
+function Stars({n}){ return html`<span style="color:var(--amber)">${'★'.repeat(Math.round(n))}</span>`; }
+
+/* ================= PAYMENTS / EXTERNAL PAGES ================= */
+let extDone = null;
+function pay({amount,purpose,bank='kaspi',onDone}){ extDone=onDone; set(s=>{s.ext={kind:bank,amount,purpose,step:0}; s.sheet=null;}); }
+function egov(doc,onDone){ extDone=onDone; set(s=>{s.ext={kind:'egov',doc,step:0}; s.sheet=null;}); }
+function Ext(){
+  const e=ST.ext; if(!e) return null;
+  const go = step => set(s=>{s.ext.step=step});
+  const confirm = () => { go(1); setTimeout(()=>go(2),1500); };
+  const finish = () => { const f=extDone; extDone=null; set(s=>{s.ext=null}); f&&f(); };
+  const cancel = () => { extDone=null; set(s=>{s.ext=null}); toast('Payment cancelled. Nothing was charged.'); };
+  if(e.kind==='egov') return html`<div class="ext egov"><div class="eh">eGov Mobile<div style="font-size:13px;font-weight:500;opacity:.85;margin-top:4px">External system · digital signature</div></div><div class="eb">
+    ${e.step===0&&html`<div class="ecard"><div style="font-size:13px;color:#666">Document to sign</div><div style="font-weight:700;margin-top:4px">${e.doc}</div><div style="font-size:13px;color:#666;margin-top:10px">Signer</div><div style="font-weight:600">Aruzhan Serikova, IIN •••• 4412</div></div><button class="ebtn" onClick=${confirm}>Sign with eGov</button><button style="color:#666;padding:10px" onClick=${cancel}>Cancel</button>`}
+    ${e.step===1&&html`<div class="ecard" style="text-align:center;color:#1F5BBF"><div class="spin"></div><div style="color:#333">Confirming your identity…</div></div>`}
+    ${e.step===2&&html`<div class="ecard" style="text-align:center"><div style="font-size:44px;color:#1F5BBF">✓</div><div style="font-weight:700;font-size:18px">Document signed</div><div style="color:#666;font-size:14px;margin-top:6px">The signature was sent back to Campus Nest.</div></div><button class="ebtn" onClick=${finish}>Back to Campus Nest</button>`}
+  </div></div>`;
+  const bank = e.kind==='halyk'?'Halyk':'Kaspi.kz';
+  return html`<div class=${'ext '+e.kind}><div class="eh">${bank}<div style="font-size:13px;font-weight:500;opacity:.85;margin-top:4px">External system · secure payment page</div></div><div class="eb">
+    ${e.step===0&&html`<div class="ecard"><div style="font-size:13px;color:#666">Recipient</div><div style="font-weight:700;margin-top:2px">Campus Nest escrow account</div><div style="font-size:13px;color:#666">Partner bank, held until move-in</div>
+      <div style="font-size:13px;color:#666;margin-top:12px">Purpose</div><div style="font-weight:600">${e.purpose}</div>
+      <div style="font-size:32px;font-weight:800;margin-top:12px">${kzt(e.amount)}</div></div>
+      <div class="ecard" style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-weight:700">${e.kind==='halyk'?'Halyk Visa':'Kaspi Gold'}</div><div style="font-size:13px;color:#666">•••• 4417</div></div><div style="width:22px;height:22px;border-radius:50%;border:6px solid ${e.kind==='halyk'?'#00805A':'#E4002B'}"></div></div>
+      <div style="font-size:12.5px;color:#777;line-height:1.5">You are on the bank’s page. Campus Nest never receives your card details.</div>
+      <div style="flex:1"></div><button class="ebtn" onClick=${confirm}>Pay ${kzt(e.amount)}</button><button style="color:#666;padding:10px" onClick=${cancel}>Cancel</button>`}
+    ${e.step===1&&html`<div class="ecard" style="text-align:center;color:${e.kind==='halyk'?'#00805A':'#E4002B'}"><div class="spin"></div><div style="color:#333">Confirm the payment in the ${bank} app…</div></div>`}
+    ${e.step===2&&html`<div class="ecard" style="text-align:center"><div style="font-size:44px;color:#1E9E5A">✓</div><div style="font-weight:700;font-size:18px">Payment successful</div><div style="color:#666;font-size:14px;margin-top:6px">${kzt(e.amount)} · ${e.purpose}</div></div><div style="flex:1"></div><button class="ebtn" onClick=${finish}>Back to Campus Nest</button>`}
+  </div></div>`;
+}
+function Lightbox(){
+  const l=ST.lb; if(!l) return null;
+  const mv = d => set(s=>{s.lb.i=(s.lb.i+d+s.lb.imgs.length)%s.lb.imgs.length});
+  return html`<div class="lb" role="dialog" aria-label="Photo viewer"><div class="bar2"><span>${l.i+1} of ${l.imgs.length}</span><button aria-label="Close" onClick=${()=>set(s=>{s.lb=null})} style="color:#fff">${Ic('x',26)}</button></div><img src=${l.imgs[l.i]} alt="Full size photo"/>${l.imgs.length>1&&html`<div class="nav"><button aria-label="Previous" onClick=${()=>mv(-1)}>‹</button><button aria-label="Next" onClick=${()=>mv(1)}>›</button></div>`}</div>`;
+}
+const Toast = () => ST.toast ? html`<div class="toast" role="status">${ST.toast}</div>` : null;
+</script>
+<script>
+/* ================= SHEETS ================= */
+function Sheet(){
+  const sh=ST.sheet; if(!sh) return null;
+  const S_ = SHEETS[sh.type]; if(!S_) return null;
+  return html`<div class="ov" onClick=${e=>{if(e.target===e.currentTarget)closeSheet()}}><div class="sheet" role="dialog"><div class="grab"></div><${S_} ...${sh.p}/></div></div>`;
+}
+function OtpInput({n=6,onDone,onChange}){
+  const refs=useRef([]); const [v,setV]=useState(Array(n).fill(''));
+  const upd=(i,val)=>{ const d=val.replace(/\D/g,'').slice(-1); const nv=[...v]; nv[i]=d; setV(nv); onChange&&onChange(nv.join('')); if(d&&i<n-1) refs.current[i+1]?.focus(); if(nv.every(x=>x)&&onDone) onDone(nv.join('')); };
+  return html`<div class="otp">${v.map((x,i)=>html`<input inputmode="numeric" aria-label=${'Digit '+(i+1)} maxlength="1" value=${x} ref=${el=>refs.current[i]=el} onInput=${e=>upd(i,e.target.value)} onKeyDown=${e=>{if(e.key==='Backspace'&&!v[i]&&i>0)refs.current[i-1]?.focus();}}/>`)}</div>`;
+}
+const SHEETS = {
+  confirm:({title,text,ok='Confirm',danger,onOk})=>html`<div class="h1">${title}</div><p class="muted" style="line-height:1.5">${text}</p><div class="col" style="margin-top:16px"><button class=${'btn '+(danger?'d':'p')} onClick=${()=>{closeSheet();onOk&&onOk();}}>${ok}</button><button class="btn s" onClick=${closeSheet}>Cancel</button></div>`,
+  match:({id})=>html`<div style="text-align:center"><div class="stack" style="justify-content:center;margin:10px 0 14px"><${Av} id="me" size=${84}/><${Av} id=${id} size=${84}/></div><div class="h1" style="font-size:24px">It’s a match</div><p class="muted">You and ${PEOPLE[id].name} liked each other. A chat is open now, end-to-end encrypted.</p><div class="col" style="margin-top:16px"><button class="btn p" onClick=${()=>{closeSheet();nav('M1.2',{id});}}>Say hi to ${PEOPLE[id].name}</button><button class="btn s" onClick=${closeSheet}>Keep swiping</button></div></div>`,
+  profile:({id})=>{const p=PEOPLE[id]; const r=reason(id); return html`<div class="row"><${Av} id=${id} size=${64}/><div class="grow"><div class="h1">${p.name}, ${p.age}</div><div class="muted small">${p.uni} · ${p.major}, year ${p.year}</div></div><span class="pill mint">${score(ST.me,p)}%</span></div><p style="line-height:1.5">${p.bio}</p><div class="chips"><span class="chip">${SLEEP[p.sleep]}</span><span class="chip">Tidy ${p.clean}/5</span><span class="chip">${SMOKE[p.smoke]}</span><span class="chip">Guests ${GUESTS[p.guests].toLowerCase()}</span><span class="chip">${p.budget[0]}–${p.budget[1]}k KZT</span><span class="chip">${p.langs.join(', ')}</span></div><div class="row" style="margin-top:14px"><span class="pill mint">${Ic('shield',14)} Student ID verified</span><span class="pill peri">Trust Score ${trustOf(id)}</span></div>${r.warn&&html`<div class="ai" style="margin-top:14px"><div class="k">${Ic('spark',15)} AI conflict check</div><p>${r.warn}.</p></div>`}<button class="btn s" style="margin-top:16px" onClick=${closeSheet}>Close</button>`;},
+  filters:()=>html`<div class="h1">Roommate filters</div><p class="muted small">Dealbreakers hide people completely. AI never overrides them.</p><h3>Dealbreakers</h3><div class="chips">${[['smoking','Smoking'],['late','Night owls'],['pets','Pets at home'],['guests','Frequent guests']].map(([k,l])=>html`<button class=${'chip warn'+(ST.me.dealbreakers.includes(k)?' on':'')} onClick=${()=>set(s=>{const d=s.me.dealbreakers;s.me.dealbreakers=d.includes(k)?d.filter(x=>x!==k):[...d,k];})}>${l}</button>`)}</div><h3>Ignored by AI</h3>${Object.keys(ST.notImp).filter(k=>ST.notImp[k]).length? html`<div class="chips">${Object.keys(ST.notImp).filter(k=>ST.notImp[k]).map(k=>html`<button class="chip on" onClick=${()=>set(s=>{s.notImp[k]=false})}>${k} · restore</button>`)}</div>` : html`<p class="muted small">Nothing yet. Tap “Not important to me” under an AI reason to lower a factor.</p>`}<div class="row" style="margin-top:18px"><div class="grow"><b>Use AI matching</b><div class="muted small">Off: plain filters, no learned weights</div></div><${Sw} on=${!ST.aiOff} onClick=${()=>set(s=>{s.aiOff=!s.aiOff})}/></div><button class="btn p" style="margin-top:18px" onClick=${closeSheet}>Show roommates</button>`,
+  slots:({lid})=>{const L=LISTINGS.find(x=>x.id===lid); const slots=[['Sat','14:00'],['Sun','11:00'],['Mon','18:30'],['Tue','19:00']]; return html`<div class="h1">Book a viewing</div><p class="muted small">${L.title}, ${L.addr}. Slots come from the landlord’s calendar.</p><div class="grid2" style="margin:14px 0">${slots.map(([d,t])=>{const v=d+' '+t; return html`<button class=${'slot'+(ST.viewing[lid]===v?' on':'')} onClick=${()=>set(s=>{s.viewing[lid]=v})}><b>${d}</b>${t}</button>`;})}</div><button class="btn p" disabled=${!ST.viewing[lid]} onClick=${()=>{closeSheet();toast('Viewing booked: '+ST.viewing[lid]+'. Serik will get a notification.');}}>Book viewing</button>`;},
+  sign:()=>{const [m,setM]=useState('totp'); const [st,setSt]=useState(0); const done=()=>{closeSheet();signMine();}; return html`<div class="h1">Sign the contract</div><p class="muted small">Your signature is legally binding. Choose how to confirm it.</p><div class="chips" style="margin:12px 0 16px"><button class=${'chip'+(m==='totp'?' on':'')} onClick=${()=>setM('totp')}>Authenticator code</button><button class=${'chip'+(m==='egov'?' on':'')} onClick=${()=>setM('egov')}>eGov digital signature</button></div>${m==='totp'? html`<div class="field"><label>6-digit code from your authenticator app</label><${OtpInput} onDone=${()=>{setSt(1);setTimeout(done,900);}}/></div>${st===1&&html`<div class="pill mint">${Ic('check',14)} Code verified, signing…</div>`}<p class="muted small">Tip: type any 6 digits in this prototype.</p>` : html`<p class="muted small" style="line-height:1.5">You will be redirected to eGov Mobile. Campus Nest only receives the signed document.</p><button class="btn p" onClick=${()=>{closeSheet();egov('Lease contract CN-2026-0412',signMine);}}>Continue to eGov</button>`}`;},
+  reset:()=>{const [sent,setSent]=useState(false); return html`<div class="h1">Reset password</div>${sent? html`<p style="line-height:1.5">We sent a reset link to <b>aruzhan@astanait.edu.kz</b>. After you open it, we will ask for your authenticator code.</p><button class="btn p" onClick=${closeSheet}>Done</button>` : html`<p class="muted small">Enter the email you signed up with.</p><div class="field"><input class="inp" value="aruzhan@astanait.edu.kz" aria-label="Email"/></div><button class="btn p" onClick=${()=>setSent(true)}>Send reset link</button>`}`;},
+  guest:()=>html`<div class="h1">Log in to apply</div><p class="muted" style="line-height:1.5">Guests can browse listings. To apply, book viewings or chat, create an account. It takes two minutes.</p><div class="col" style="margin-top:14px"><button class="btn p" onClick=${()=>{closeSheet();set(s=>{s.guest=false;s.stack.student=[{id:'P0'},{id:'P4'}]});}}>Create account</button><button class="btn g" onClick=${()=>{closeSheet();set(s=>{s.guest=false;s.stack.student=[{id:'P0'},{id:'P3'}]});}}>Log in</button></div>`,
+  report:({who})=>{const [r,setR]=useState(null); return html`<div class="h1">Report ${who||'this message'}</div><p class="muted small">Moderators see only the reported messages, not the whole chat.</p><div class="col" style="margin:12px 0">${['Asks to pay outside Campus Nest','Fake listing or scam','Harassment','Spam'].map(x=>html`<button class=${'item'+(r===x?' on':'')} style=${r===x?'outline:2px solid var(--coral)':''} onClick=${()=>setR(x)}><span class="grow">${x}</span>${r===x&&Ic('check',18)}</button>`)}</div><button class="btn d" disabled=${!r} onClick=${()=>{closeSheet();toast('Reported. A moderator will review it within 24 hours.');}}>Send report</button>`;},
+  dispute:()=>{const [r,setR]=useState('Damage not shown in the listing'); const [t,setT]=useState(''); const n=Object.keys(ST.checkin.photos).length; return html`<div class="h1">Open a dispute</div><p class="muted small">The deposit stays in escrow until a moderator decides, within 5 working days.</p><div class="field" style="margin-top:12px"><label>Reason</label><select class="inp" onChange=${e=>setR(e.target.value)}>${['Damage not shown in the listing','Flat does not match the photos','Appliances do not work','Other'].map(x=>html`<option selected=${x===r}>${x}</option>`)}</select></div><div class="field"><label>What happened</label><textarea class="inp" placeholder="Describe the problem" value=${t} onInput=${e=>setT(e.target.value)}></textarea></div><div class="pill ${n?'mint':'amber'}" style="margin-bottom:14px">${n?`${n} check-in photos attached as evidence`:'Add check-in photos first: they are your evidence'}</div><button class="btn d" disabled=${!n} onClick=${()=>{closeSheet();set(s=>{s.checkin.dispute={r,at:'today'};});toast('Dispute opened. Deposit is frozen until a decision.');}}>Open dispute</button>`;},
+  topup:()=>{const [a,setA]=useState(5000); return html`<div class="h1">Top up wallet</div><p class="muted small">Wallet money is used only for promotion.</p><div class="grid3" style="margin:14px 0">${[2000,5000,10000].map(v=>html`<button class=${'slot'+(a===v?' on':'')} onClick=${()=>setA(v)}><b>${fmt(v)}</b>KZT</button>`)}</div><button class="btn p" onClick=${()=>pay({amount:a,purpose:'Wallet top-up',onDone:()=>{set(s=>{s.ll.wallet+=a});toast('Wallet topped up by '+kzt(a));}})}>Top up ${kzt(a)}</button>`;},
+  promote:({lid})=>{const [pk,setPk]=useState('top'); const P={top:['Top of search, 7 days',1500],hl:['Highlighted card, 7 days',900],feat:['Featured near campus, 14 days',2500]}; const cool = ST.ll.refreshAt>Date.now(); const L=LISTINGS.find(x=>x.id===lid); return html`<div class="h1">Promote listing</div><p class="muted small">${L.title}</p><div class="card flat" style="margin:12px 0;background:var(--s2)"><div class="between"><div><b>Free refresh</b><div class="muted small">${cool?'Used. Available again in 3 days':'Shows students you are actively looking'}</div></div><button class="btn sm g" disabled=${cool} onClick=${()=>{set(s=>{s.ll.refreshAt=Date.now()+3*864e5});toast('Listing refreshed. It moved up in search.');}}>Refresh</button></div></div><h3>Paid promotion</h3><div class="col">${Object.entries(P).map(([k,[n,p]])=>html`<button class="item" style=${pk===k?'outline:2px solid var(--amber)':''} onClick=${()=>setPk(k)}><span class="grow"><span class="t">${n}</span><div class="s">${kzt(p)} from wallet</div></span>${pk===k&&Ic('check',18)}</button>`)}</div><div class="between" style="margin:14px 0"><span class="muted">Wallet balance</span><b>${kzt(ST.ll.wallet)}</b></div>${ST.ll.wallet>=P[pk][1]? html`<button class="btn p" onClick=${()=>{set(s=>{s.ll.wallet-=P[pk][1];s.ll.promo[lid]=P[pk][0];});closeSheet();toast('Promotion started: '+P[pk][0]);}}>Pay ${kzt(P[pk][1])} and promote</button>` : html`<button class="btn g" onClick=${()=>sheet('topup')}>Top up wallet first</button>`}`;},
+  iban:()=>{const [v,setV]=useState('KZ86 125K ZT50 0410 0100'); return html`<div class="h1">Change payout details</div><div class="ai" style="margin:10px 0 14px;border-color:var(--amber);background:rgba(246,198,103,.08)"><div class="k" style="color:var(--amber)">${Ic('shield',15)} Safety hold</div><p>After you change the IBAN, payouts pause for 48 hours. This protects you if someone takes over your account.</p></div><div class="field"><label>New IBAN</label><input class="inp" value=${v} onInput=${e=>setV(e.target.value)}/></div><button class="btn p" onClick=${()=>{closeSheet();set(s=>{s.ll.ibanHold=true});toast('IBAN saved. Payouts paused for 48 hours.');}}>Save IBAN</button>`;},
+  reject:({aid})=>{const [r,setR]=useState('Already rented'); return html`<div class="h1">Reject application</div><p class="muted small">Students see the reason. Be polite and clear.</p><div class="chips" style="margin:12px 0 16px">${['Already rented','Group is too big','Dates do not fit','Requirements not met'].map(x=>html`<button class=${'chip'+(r===x?' on':'')} onClick=${()=>setR(x)}>${x}</button>`)}</div><button class="btn d" onClick=${()=>{closeSheet();setApp(aid,'rejected');toast('Application rejected. The students were notified.');}}>Reject application</button>`;},
+  review:({target})=>{const [n,setN]=useState(5); const tags=['Clean flat','Quiet neighbours','Fast replies','As in photos','Fair deposit']; const [t,setT]=useState(['As in photos']); return html`<div class="h1">Review ${target||'your stay'}</div><p class="muted small">You can review only after a real contract. This keeps reviews honest.</p><div class="stars" style="margin:14px 0">${[1,2,3,4,5].map(i=>html`<button class=${i<=n?'on':''} aria-label=${i+' stars'} onClick=${()=>setN(i)}>★</button>`)}</div><div class="chips">${tags.map(x=>html`<button class=${'chip'+(t.includes(x)?' on':'')} onClick=${()=>setT(t.includes(x)?t.filter(y=>y!==x):[...t,x])}>${x}</button>`)}</div><div class="field" style="margin-top:14px"><textarea class="inp" placeholder="Anything else future tenants should know?"></textarea></div><button class="btn p" onClick=${()=>{closeSheet();toast('Review published. Thank you!');}}>Publish review</button>`;},
+  pwd:()=>html`<div class="h1">Change password</div><div class="field" style="margin-top:12px"><label>Current password</label><input class="inp" type="password" value="password1"/></div><div class="field"><label>New password</label><input class="inp" type="password" placeholder="At least 10 characters"/></div><button class="btn p" onClick=${()=>{closeSheet();toast('Password changed. Other devices were signed out.');}}>Change password</button>`,
+  del:()=>{const [v,setV]=useState(''); return html`<div class="h1">Delete account</div><p class="muted" style="line-height:1.5">Your profile, matches and documents will be deleted. Contracts are kept for 5 years as the law requires.</p><div class="field"><label>Type DELETE to confirm</label><input class="inp" value=${v} onInput=${e=>setV(e.target.value)}/></div><button class="btn d" disabled=${v!=='DELETE'} onClick=${()=>{closeSheet();toast('Account deletion requested. You have 14 days to change your mind.');}}>Delete my account</button>`;},
+  doc:({kind})=>html`<div class="h1">${kind}</div><p class="muted small">Upload a clear photo or PDF. A moderator checks it, usually within a day. Scans of IDs are deleted after the check.</p><div style="margin:14px 0"><${AddPhoto} h=${120} label="Choose file" accept="image/*,.pdf" onFiles=${()=>{closeSheet();toast(kind+' uploaded. Status: pending review.');}}/></div>`
+};
+
+/* ================= PUBLIC ================= */
+function P0(){
+  return html`<div class="body"><div style="height:330px;position:relative"><img src=${room('exterior',1)} alt="" style="width:100%;height:100%;object-fit:cover"/><div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,10,46,0) 35%,var(--navy) 100%)"></div></div>
+  <div class="pad" style="margin-top:-70px;position:relative">
+    <div style="font-family:var(--head);font-weight:700;font-size:44px;line-height:1">Campus<br/><span style="color:var(--peri)">Nest</span></div>
+    <p class="muted" style="font-size:17px;line-height:1.45;margin:14px 0 22px">A flat near your university and roommates whose habits match yours.</p>
+    <div class="list">
+      ${[['users','Roommates by habits','Sleep, cleanliness, guests: not luck','var(--peri)'],['shield','Verified landlords','ID and ownership checked','var(--mint)'],['lock','Deposit held by a bank','Released only after you move in','var(--amber)']].map(([i,t,s,c])=>html`<div class="row"><div class="tile" style=${`background:color-mix(in srgb, ${c} 20%, transparent);color:${c}`}>${Ic(i)}</div><div><div style="font-weight:600">${t}</div><div class="muted small">${s}</div></div></div>`)}
+    </div>
+    <div class="col" style="margin-top:26px"><button class="btn p" onClick=${()=>nav('P4')}>Create account</button><button class="btn g" onClick=${()=>nav('P3')}>Log in</button><button class="btn" style="height:40px;color:var(--peri);font-size:15px" onClick=${()=>{set(s=>{s.guest=true});nav('S2.1');}}>Browse flats as a guest</button></div>
+  </div></div>`;
+}
+function P3(){
+  const [code,setCode]=useState(''); const [show,setShow]=useState(false);
+  const login = () => { if(code.length<6){toast('Enter the 6-digit code from your authenticator app');return;} set(s=>{s.guest=false;s.stack.student=[{id:'S0'}]}); toast('Welcome back, Aruzhan'); };
+  return html`<div class="body"><${Top} title="Log in"/><div class="pad">
+    <div class="field"><label>Email</label><input class="inp" type="email" value="aruzhan@astanait.edu.kz"/></div>
+    <div class="field"><label>Password</label><div style="position:relative"><input class="inp" type=${show?'text':'password'} value="campusnest2026"/><button style="position:absolute;right:12px;top:13px;color:var(--muted)" aria-label="Show password" onClick=${()=>setShow(!show)}>${Ic('eye',22)}</button></div><button class="small" style="align-self:flex-end;color:var(--peri);margin-top:4px" onClick=${()=>sheet('reset')}>Forgot password?</button></div>
+    <div class="field"><label>Code from your authenticator app</label><${OtpInput} onChange=${setCode}/></div>
+    <span class="pill coral" style="margin-bottom:18px">${Ic('lock',14)} Two-factor login protects your documents</span>
+    <button class="btn p" onClick=${login}>Log in</button>
+    <div class="muted small" style="text-align:center;margin:14px 0">or</div>
+    <div class="col"><button class="btn s" onClick=${()=>{set(s=>{s.stack.student=[{id:'S0'}]});toast('Signed in with Google');}}>Continue with Google</button><button class="btn s" onClick=${()=>{set(s=>{s.stack.student=[{id:'S0'}]});toast('Signed in with Apple');}}>Continue with Apple</button></div>
+  </div></div>`;
+}
+function P4(){
+  const o=ST.onb; const up=f=>set(s=>{f(s.onb)});
+  const steps=['Role','Contacts','2FA',o.role==='student'?'Student card':'ID'];
+  const [sent,setSent]=useState(false);
+  const next=()=>{ if(o.step<3) up(x=>{x.step++}); else { if(o.role==='student'){ set(s=>{s.stack.student=[{id:'S0'},{id:'S1.1',p:{first:true}}]}); toast('Account created. Tell us about your lifestyle.'); } else { set(s=>{s.role='landlord';s.stack.landlord=[{id:'L0'},{id:'L5'}]}); toast('Account created. Verify your identity to publish listings.'); } up(x=>{x.step=0}); } };
+  const ok = [true, o.codes, o.tfa, !!o.card][o.step];
+  return html`<div class="body"><${Top} title="Create account" sub=${`Step ${o.step+1} of 4 · ${steps[o.step]}`}/><div class="step">${steps.map((_,i)=>html`<i class=${i<=o.step?'on':''}></i>`)}</div><div class="pad">
+    ${o.step===0&&html`<h3 style="margin-top:0">I am a…</h3><div class="grid2">${[['student','Student','Find a flat and roommates','users','var(--peri)'],['landlord','Landlord','Rent out a flat or rooms','house','var(--mint)']].map(([k,t,s,i,c])=>html`<button class="card tap" style=${`text-align:left;${o.role===k?'border-color:var(--primary);border-width:2px':''}`} onClick=${()=>up(x=>{x.role=k})}><div class="tile" style=${`background:color-mix(in srgb, ${c} 22%, transparent);color:${c};margin-bottom:12px`}>${Ic(i)}</div><b>${t}</b><div class="muted small" style="margin-top:4px">${s}</div></button>`)}</div><p class="muted small" style="margin-top:16px;line-height:1.5">One role per account. By continuing you accept the Terms and Privacy Policy. Your data is stored in Kazakhstan.</p>`}
+    ${o.step===1&&html`<div class="field"><label>University email</label><input class="inp" value="aruzhan@astanait.edu.kz"/></div><div class="field"><label>Phone</label><input class="inp" value="+7 701 555 24 12"/></div>${!sent? html`<button class="btn g" onClick=${()=>setSent(true)}>Send codes</button>` : html`<div class="field"><label>Code from email and SMS</label><${OtpInput} n=${4} onDone=${()=>{up(x=>{x.codes=true});toast('Email and phone verified');}}/></div>${o.codes&&html`<span class="pill mint">${Ic('check',14)} Verified</span>`}`}`}
+    ${o.step===2&&html`<p class="muted" style="line-height:1.5;margin-top:0">Scan this code with Google Authenticator or any TOTP app, then enter the 6-digit code.</p><img class="qr" src=${qrArt()} alt="QR code for the authenticator app"/><div class="field"><label>6-digit code</label><${OtpInput} onDone=${()=>{up(x=>{x.tfa=true});toast('Two-factor login is on');}}/></div>${o.tfa&&html`<span class="pill mint">${Ic('check',14)} 2FA enabled</span>`}`}
+    ${o.step===3&&html`<p class="muted" style="line-height:1.5;margin-top:0">${o.role==='student'?'Upload your student card. A moderator checks it (A2.1). Only verified students can apply for flats.':'Upload your ID. Then you will add ownership documents for each property.'}</p>${o.card? html`<${Photo} src=${o.card} h=${190} label="Uploaded" onRemove=${()=>up(x=>{x.card=null})}/><span class="pill amber" style="margin-top:10px">Pending moderator review</span>` : html`<${AddPhoto} h=${190} multiple=${false} label=${o.role==='student'?'Upload student card':'Upload ID'} onFiles=${fs=>up(x=>{x.card=fs[0].src})}/><button class="small" style="color:var(--peri);margin-top:10px" onClick=${()=>up(x=>{x.card=room('bedroom',3)})}>Use a sample image (demo)</button>`}`}
+    <button class="btn p" style="margin-top:24px" disabled=${!ok} onClick=${next}>${o.step<3?'Continue':'Finish'}</button>
+  </div></div>`;
+}
+
+/* ================= STUDENT ================= */
+function S0(){
+  const g=groupStats(); const unread=ST.notifs.filter(n=>!n.read).length; const a=ST.app;
+  const steps=[];
+  if(ST.lease){ steps.push(['camera','Check in with photos','Protects your deposit','S5.2',{},'var(--amber)']); steps.push(['wallet','Pay rent for October',kzt(Math.round(LISTINGS.find(x=>x.id===ST.lease.lid).price/ST.group.members.length)),'S5.1',{},'var(--mint)']); }
+  else if(a&&a.status==='approved') steps.push(['doc','Sign your lease contract','Approved by Serik','M3.1',{},'var(--mint)']);
+  else if(a) steps.push(['cal','Application sent','Waiting for the landlord','S4.3',{},'var(--amber)']);
+  steps.push(['users',`${ST.matches.length} mutual matches`,ST.matches.slice(0,3).map(id=>`${PEOPLE[id].name} ${score(ST.me,PEOPLE[id])}%`).join(', '),'S1.3',{},'var(--peri)']);
+  steps.push(['spark',`Group “${ST.group.name}”`,`${ST.group.members.length} members${g.risk?' · AI found 1 risk':''}`,'S3.2',{},'var(--lilac)']);
+  if(!a) steps.push(['house','Viewing booked',`${ST.viewing.l1||'Pick a slot'} · Kabanbay Batyr 53`,'S2.3',{id:'l1'},'var(--amber)']);
+  return html`<div class="body"><div class="pad" style="padding-top:8px">
+    <div class="between hide-web"><div class="row"><${Av} id="me" size=${48}/><div><div class="h1">Hi, Aruzhan</div><div class="muted small">AITU, Software Engineering</div></div></div><button class="iconbtn" aria-label="Notifications" onClick=${()=>nav('M2.1')}>${Ic('bell')}${unread?html`<span class="dot"></span>`:''}</button></div>
+    <button class="card tap" style="width:100%;text-align:left;margin-top:18px" onClick=${()=>nav('S6.1')}><div class="between"><div><div class="muted small">Trust Score</div><div style="font-family:var(--head);font-size:40px;font-weight:500">${ST.trust.score}<span class="muted" style="font-size:15px;font-family:var(--body)"> / 100</span></div></div><div style="width:150px"><div class="bar"><i style=${`width:${ST.trust.score}%`}></i></div><div class="small" style="color:var(--mint);margin-top:6px">${ST.trust.rent.length?`+${ST.trust.rent.length*3} for on-time rent`:'Grows with on-time rent'}</div></div></div></button>
+    <h3>Next steps</h3><div class="list">${steps.map(([i,t,s,go,p,c])=>html`<button class="item tap" onClick=${()=>nav(go,p)}><div class="tile" style=${`background:color-mix(in srgb, ${c} 20%, transparent);color:${c}`}>${Ic(i)}</div><div class="grow"><div class="t">${t}</div><div class="s">${s}</div></div><span class="chev">›</span></button>`)}</div>
+    <h3>Picked for your group</h3>
+    <div class="list">${LISTINGS.filter(l=>l.verified).slice(0,2).map(l=>html`<${LCard} l=${l}/>`)}</div>
+  </div></div>`;
+}
+function S11(){
+  const m=ST.me; const u=f=>set(s=>{f(s.me)});
+  const first = cur().p?.first;
+  const Row=(label,opts,val,fn)=>html`<h3>${label}</h3><div class="chips">${opts.map((o,i)=>html`<button class=${'chip'+(val===i||val===o?' on':'')} onClick=${()=>fn(i,o)}>${o}</button>`)}</div>`;
+  const bmin=m.budget[0], bmax=m.budget[1];
+  return html`<div class="body"><${Top} title="Your lifestyle" sub="AI matching uses only these answers, never photos"/><div class="pad" style="padding-top:0">
+    ${Row('Sleep time',SLEEP,m.sleep,i=>u(x=>{x.sleep=i}))}
+    <h3>Cleanliness</h3><div class="row">${[1,2,3,4,5].map(i=>html`<button class=${'lvl'+(i<=m.clean?' on':'')} aria-label=${'Cleanliness '+i} onClick=${()=>u(x=>{x.clean=i})}>${i}</button>`)}</div>
+    ${Row('Smoking',['Non-smoker','Smoker','Outside only'],['no','yes','outside'].indexOf(m.smoke),i=>u(x=>{x.smoke=['no','yes','outside'][i]}))}
+    ${Row('Guests',GUESTS,m.guests,i=>u(x=>{x.guests=i}))}
+    ${Row('Pets',['No pets please','OK with pets','I have a pet'],['none','ok','has'].indexOf(m.pets),i=>u(x=>{x.pets=['none','ok','has'][i]}))}
+    <h3>Budget per month</h3><div class="range2"><div class="track"></div><div class="fill" style=${`left:${(bmin-30)/120*100}%;right:${100-(bmax-30)/120*100}%`}></div><input type="range" min="30" max="150" step="5" value=${bmin} aria-label="Minimum budget" onInput=${e=>u(x=>{x.budget=[Math.min(+e.target.value,x.budget[1]-5),x.budget[1]]})}/><input type="range" min="30" max="150" step="5" value=${bmax} aria-label="Maximum budget" onInput=${e=>u(x=>{x.budget=[x.budget[0],Math.max(+e.target.value,x.budget[0]+5)]})}/></div><div class="muted small" style="margin-top:6px">${fmt(bmin*1000)} – ${fmt(bmax*1000)} KZT</div>
+    <h3>Languages</h3><div class="chips">${['Kazakh','Russian','English','Turkish','Chinese'].map(l=>html`<button class=${'chip'+(m.langs.includes(l)?' on':'')} onClick=${()=>u(x=>{x.langs=x.langs.includes(l)?x.langs.filter(y=>y!==l):[...x.langs,l]})}>${l}</button>`)}</div>
+    <h3>Dealbreakers</h3><p class="muted small" style="margin-top:-4px">People with these are hidden. AI never overrides them.</p><div class="chips">${[['smoking','Smoking'],['late','Night owls'],['pets','Pets at home'],['guests','Frequent guests']].map(([k,l])=>html`<button class=${'chip warn'+(m.dealbreakers.includes(k)?' on':'')} onClick=${()=>u(x=>{x.dealbreakers=x.dealbreakers.includes(k)?x.dealbreakers.filter(y=>y!==k):[...x.dealbreakers,k]})}>${l}</button>`)}</div>
+    <button class="btn p" style="margin-top:26px" onClick=${()=>{toast('Saved. Compatibility scores updated.'); if(first) set(s=>{s.stack.student=[{id:'S0'},{id:'S1.2'}]}); else back();}}>Save and find roommates</button>
+  </div></div>`;
+}
+function hidden(id){ const p=PEOPLE[id], d=ST.me.dealbreakers; return (d.includes('smoking')&&p.smoke==='yes')||(d.includes('late')&&p.sleep===2)||(d.includes('pets')&&p.pets==='has')||(d.includes('guests')&&p.guests===2); }
+function S12(){
+  const pool=ST.deck.filter(id=>!ST.swiped[id]); const deck=pool.filter(id=>!hidden(id)); const hid=pool.length-deck.length;
+  const [dx,setDx]=useState(0); const [drag,setDrag]=useState(false); const sx=useRef(0); const [fly,setFly]=useState(false);
+  const id=deck[0];
+  const decide = like => { setFly(true); setDx(like?520:-520); setTimeout(()=>{ let crossed=null; set(s=>{ s.swiped[id]=like?'like':'skip'; crossed=learn(id,like); if(like&&PEOPLE[id].likesYou){ s.matches.unshift(id); s.chats[id]=s.chats[id]||[]; s.notifs.unshift({t:`${PEOPLE[id].name} liked you back`,s:'It is a match, say hi',go:'M1.2',p:{id},read:false}); s.sheet={type:'match',p:{id}}; } }); setDx(0); setFly(false); if(crossed&&!ST.learned){ set(s=>{s.learned=true}); setTimeout(()=>toast(`AI learned: ${({sleep:'sleep timing',clean:'cleanliness',smoke:'smoking',guests:'guests',pets:'pets',budget:'budget'})[crossed]} matters a lot to you`),400);} },230); };
+  const card = (pid,under) => { const p=PEOPLE[pid]; const r=reason(pid); const sc=score(ST.me,p);
+    return html`<div class=${'scard'+(under?' under':'')} style=${under?'':`transform:translateX(${dx}px) rotate(${dx/22}deg);transition:${drag?'none':'transform .23s ease'}`}
+      onPointerDown=${under?null:e=>{if(e.target.closest('button'))return;sx.current=e.clientX;setDrag(true);e.currentTarget.setPointerCapture(e.pointerId);}}
+      onPointerMove=${under?null:e=>{if(drag)setDx(e.clientX-sx.current)}}
+      onPointerUp=${under?null:()=>{if(!drag)return;setDrag(false);if(Math.abs(dx)>110)decide(dx>0);else setDx(0);}}>
+      <div class="ph"><img src=${face(pid)} alt=${p.name}/><span class="score">${ST.aiOff?'Filters only':sc+'% match'}</span>${!under&&html`<span class="stamp like" style=${`opacity:${Math.max(0,dx/120)}`}>LIKE</span><span class="stamp nope" style=${`opacity:${Math.max(0,-dx/120)}`}>SKIP</span>`}</div>
+      <div style="padding:14px 16px;overflow:auto">
+        <div class="between"><div><div class="h1">${p.name}, ${p.age}</div><div class="muted small">${p.uni} · ${p.major}, year ${p.year}</div></div><button class="iconbtn" aria-label="Open profile" onClick=${()=>sheet('profile',{id:pid})}>${Ic('user',20)}</button></div>
+        <div class="chips" style="margin:12px 0"><span class="chip">${SLEEP[p.sleep]}</span><span class="chip">Tidy ${p.clean}/5</span><span class="chip">${SMOKE[p.smoke]}</span><span class="chip">Guests ${GUESTS[p.guests].toLowerCase()}</span><span class="chip">${p.budget[0]}–${p.budget[1]}k</span></div>
+        ${!ST.aiOff&&html`<div class="ai"><div class="k">${Ic('spark',15)} Why this score</div><p>${r.main}</p>${r.warn&&html`<p style="color:var(--coral);margin-top:6px">Watch out: ${r.warn}.</p>`}${r.topKey&&html`<button class="small" style="color:var(--peri);margin-top:8px;font-weight:600" onClick=${()=>{set(s=>{s.notImp[r.topKey]=true});toast('Got it. This factor will count less in your scores.');}}>Not important to me</button>`}</div>`}
+      </div></div>`; };
+  return html`<div class="body"><div class="top"><div class="grow"><h1>Roommates</h1><div class="sub">${deck.length} nearby${hid?` · ${hid} hidden by dealbreakers`:''}</div></div><button class="iconbtn" aria-label="Filters" onClick=${()=>sheet('filters')}>${Ic('sliders')}</button><button class="iconbtn" aria-label="Matches" onClick=${()=>nav('S1.3')}>${Ic('heart')}</button></div>
+    ${id? html`<div class="deck">${deck[1]&&card(deck[1],true)}${card(id,false)}</div>
+      <div class="sact"><button class="round n" aria-label="Skip" onClick=${()=>decide(false)} disabled=${fly}>${Ic('x',26)}</button><button class="round y" aria-label="Like" onClick=${()=>decide(true)} disabled=${fly}>${Ic('heart',26)}</button></div>
+      <p class="muted small" style="text-align:center;margin:0 0 20px">Drag the card or use the buttons</p>`
+    : html`<div class="pad"><div class="empty"><div class="h1">You have seen everyone nearby</div><p>New students join every day. Change filters or check your matches.</p><div class="col" style="margin-top:16px"><button class="btn p" onClick=${()=>nav('S1.3')}>Open matches</button><button class="btn s" onClick=${()=>set(s=>{s.swiped={}})}>Start over (demo)</button></div></div></div>`}
+  </div>`;
+}
+function S13(){
+  return html`<div class="body"><${Top} title="Matches" sub="Mutual likes only"/><div class="pad"><div class="list">
+    ${ST.matches.map(id=>{ const p=PEOPLE[id]; const r=reason(id); const inG=ST.group.members.includes(id);
+      return html`<div class="card"><div class="row"><button onClick=${()=>sheet('profile',{id})}><${Av} id=${id} size=${52}/></button><div class="grow"><div style="font-weight:700;font-size:16px">${p.name}</div><div class="muted small">${score(ST.me,p)}% compatibility · Trust ${trustOf(id)}</div></div>${ST.unread[id]?html`<span class="pill coral">${ST.unread[id]} new</span>`:''}</div>
+      ${r.warn? html`<div class="pill coral" style="margin-top:10px;white-space:normal;line-height:1.35">${Ic('spark',14)} AI warning: ${r.warn}</div>` : html`<div class="pill mint" style="margin-top:10px">${Ic('spark',14)} AI: no conflicts found</div>`}
+      <div class="btns" style="margin-top:12px"><button class="btn sm p" style="flex:1" onClick=${()=>{set(s=>{s.unread[id]=0});nav('M1.2',{id});}}>Chat</button><button class="btn sm g" style="flex:1" disabled=${inG} onClick=${()=>{ if(ST.group.members.length>=5){toast('A group can have up to 5 members');return;} set(s=>{s.group.members.push(id)}); toast(`${p.name} joined ${ST.group.name}`); nav('S3.2'); }}>${inG?'In your group':'Invite to group'}</button></div></div>`; })}
+  </div></div></div>`;
+}
+function S32(){
+  const g=groupStats(); const [calc,setCalc]=useState(false); const [rent,setRent]=useState(85000); const n=ST.group.members.length;
+  return html`<div class="body"><${Top} title=${ST.group.name} sub=${`Group of ${n} · up to 5 members`}/><div class="pad">
+    <div class="row" style="flex-wrap:wrap">${ST.group.members.map(id=>html`<button style="text-align:center;width:62px" onClick=${()=>id!=='me'&&sheet('profile',{id})}><${Av} id=${id} size=${54}/><div class="small" style="margin-top:4px">${id==='me'?'You':PEOPLE[id].name}</div></button>`)}${n<5&&html`<button style="text-align:center;width:62px" onClick=${()=>{navigator.clipboard?.writeText('https://campusnest.kz/g/dorm5');toast('Invite link copied');}}><div class="av" style="width:54px;height:54px;border:1.5px dashed var(--peri);display:grid;place-items:center;background:none;color:var(--peri)">${Ic('plus')}</div><div class="small" style="margin-top:4px;color:var(--peri)">Invite</div></button>`}</div>
+    <div class="grid2" style="margin-top:16px"><div class="kpi"><span>Group compatibility</span><b style="color:var(--mint)">${g.comp}%</b></div><div class="kpi"><span>Average Trust Score</span><b>${g.trustAvg}</b><span>shown to landlords</span></div></div>
+    ${g.risk? html`<div class="ai" style="margin-top:14px"><div class="k">${Ic('spark',15)} AI group warning · ${g.risk.k}</div><p>${g.risk.t}</p><div class="btns" style="margin-top:10px"><button class="btn sm s" onClick=${()=>nav('M1.2',{id:'group'})}>Discuss in group chat</button><button class="btn sm" style="color:var(--peri)" onClick=${()=>toast('Marked as discussed. AI will not show it again.')}>We agreed on it</button></div></div>` : html`<div class="ai" style="margin-top:14px"><div class="k">${Ic('spark',15)} AI group check</div><p>No major conflicts. Habits fit well.</p></div>`}
+    <h3>Other checks</h3><div class="list">${[['Budget','All members within 60–90k KZT','mint'],['Smoking','No smokers in the group','mint'],['Guests',n>3?'Mixed: rarely and weekends':'Everyone prefers rarely',n>3?'amber':'mint']].map(([t,s,c])=>html`<div class="item"><span class=${'pill '+c}>●</span><div class="grow"><div class="t">${t}</div><div class="s">${s}</div></div></div>`)}</div>
+    <button class="item tap" style="margin-top:10px" onClick=${()=>setCalc(!calc)}><div class="tile" style="background:rgba(246,198,103,.18);color:var(--amber)">${Ic('wallet')}</div><div class="grow"><div class="t">Shared budget calculator</div><div class="s">Split rent and bills between ${n}</div></div><span class="chev">${calc?'–':'+'}</span></button>
+    ${calc&&html`<div class="card" style="margin-top:8px"><div class="field"><label>Monthly rent, KZT</label><input class="inp" type="number" value=${rent} onInput=${e=>setRent(+e.target.value||0)}/></div><div class="kv"><span>Utilities (estimate)</span><span>${kzt(18000)}</span></div><div class="kv"><span>Internet</span><span>${kzt(6000)}</span></div><div class="kv"><span>Each member pays</span><span style="color:var(--mint)">${kzt(Math.round((rent+24000)/n))}</span></div></div>`}
+    <div class="col" style="margin-top:20px"><button class="btn p" onClick=${()=>nav('S2.1')}>Find a flat as a group</button><button class="btn s" onClick=${()=>nav('M1.2',{id:'group'})}>Open group chat</button></div>
+  </div></div>`;
+}
+function LCard({l}){
+  const sv=ST.saved[l.id];
+  return html`<div class="lcard tap" role="button" tabindex="0" onClick=${()=>nav('S2.3',{id:l.id})}><div class="ph"><img src=${photoSrc(l.photos[0])} alt=""/>${(l.promoted||ST.ll.promo[l.id])&&html`<span class="pill amber promo" style="background:rgba(11,10,46,.8)">Promoted</span>`}<button class=${'heart'+(sv?' on':'')} aria-label="Save" onClick=${e=>{e.stopPropagation();set(s=>{s.saved[l.id]=!sv});toast(sv?'Removed from saved':'Saved. Your group can see it.');}}>${Ic('heart',18)}</button></div>
+  <div class="in"><div class="between"><div class="price">${kzt(l.price)}</div><span class="muted small">/ month</span></div><div style="font-weight:600;margin-top:4px">${l.title}</div><div class="muted small" style="margin-top:2px">${l.addr} · ${l.dist} km to AITU · ${l.area} m²</div><div class="row" style="margin-top:10px;gap:6px">${l.verified?html`<span class="pill mint">${Ic('shield',13)} Verified landlord</span>`:html`<span class="pill coral">Not verified</span>`}${l.status==='moderation'&&html`<span class="pill amber">In moderation</span>`}</div></div></div>`;
+}
+function S21(){
+  const f=ST.filters; const uf=fn=>set(s=>{fn(s.filters)}); const [mode,setMode]=useState('list'); const [sel,setSel]=useState(null);
+  let ls=LISTINGS.filter(l=>l.status!=='moderation'&&l.status!=='paused').filter(l=>(!f.verified||l.verified)&&l.price<=f.maxPrice&&(f.type==='Any'||l.type===f.type)&&(!f.pets||l.pets)&&(!f.q||(l.title+l.addr).toLowerCase().includes(f.q.toLowerCase())));
+  ls=[...ls].sort((a,b)=>((b.promoted||ST.ll.promo[b.id])?1:0)-((a.promoted||ST.ll.promo[a.id])?1:0));
+  const W=ST.device==='web';
+  const map = html`<div class="mapbox" style=${W?'position:sticky;top:0':''}><div dangerouslySetInnerHTML=${{__html:mapArt(360,W?520:260)}}></div>
+    <span class="pin" style="left:55%;top:44%;background:var(--amber);color:#1A1406;border-color:var(--amber)">AITU</span>
+    ${ls.map(l=>html`<button class=${'pin'+(sel===l.id?' on':'')} style=${`left:${l.mx*100}%;top:${l.my*100}%`} onClick=${()=>setSel(l.id)}>${Math.round(l.price/1000)}k</button>`)}</div>`;
+  const selL = LISTINGS.find(l=>l.id===sel);
+  return html`<div class="body"><div class="top"><div class="grow"><h1>Housing</h1><div class="sub">Near AITU, Astana</div></div><button class="iconbtn" aria-label="Toggle map" onClick=${()=>setMode(mode==='list'?'map':'list')}>${Ic(mode==='list'?'map':'list')}</button></div><div class="pad" style="padding-top:0">
+    ${ST.guest&&html`<div class="card" style="margin-bottom:12px;border-color:var(--amber)"><div class="between"><span class="small">Guest mode: log in to apply or chat</span><button class="btn sm p" onClick=${()=>sheet('guest')}>Log in</button></div></div>`}
+    <div style="position:relative"><span style="position:absolute;left:14px;top:14px;color:var(--muted)">${Ic('search',20)}</span><input class="inp" style="padding-left:44px" placeholder="Street, district or campus" value=${f.q} onInput=${e=>uf(x=>{x.q=e.target.value})}/></div>
+    <div class="chips" style="margin:12px 0;flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px">
+      <button class=${'chip'+(f.verified?' on':'')} onClick=${()=>uf(x=>{x.verified=!x.verified})}>Verified only</button>
+      <button class="chip on" onClick=${()=>uf(x=>{x.maxPrice={70000:90000,90000:120000,120000:70000}[x.maxPrice]})}>Up to ${f.maxPrice/1000}k</button>
+      ${['Any','Apartment','Room','Studio','Dormitory'].map(t=>html`<button class=${'chip'+(f.type===t?' on':'')} onClick=${()=>uf(x=>{x.type=t})}>${t==='Any'?'Any type':t}</button>`)}
+      <button class=${'chip'+(f.pets?' on':'')} onClick=${()=>uf(x=>{x.pets=!x.pets})}>Pets OK</button>
+    </div>
+    <div class="muted small" style="margin-bottom:10px">${ls.length} listings</div>
+    ${W? html`<div class="split"><div class="wgrid">${ls.map(l=>html`<${LCard} l=${l}/>`)}</div>${map}</div>`
+      : mode==='map'? html`${map}${selL&&html`<div style="margin-top:12px"><${LCard} l=${selL}/></div>`}${!selL&&html`<p class="muted small" style="text-align:center">Tap a price pin to preview the flat</p>`}`
+      : ls.length? html`<div class="list">${ls.map(l=>html`<${LCard} l=${l}/>`)}</div>` : html`<div class="empty"><div class="h1">No flats match these filters</div><p>Try a higher price or any type.</p><button class="btn s" onClick=${()=>uf(x=>{x.verified=false;x.maxPrice=120000;x.type='Any';x.pets=false;x.q=''})}>Reset filters</button></div>`}
+  </div></div>`;
+}
+function reqCheck(l){ const r=l.req; return [[`Rating ≥ ${r.rating||'any'}`,true],[r.years?`Account ≥ ${r.years} year`:'Any account age',true],[r.sid?'Verified student ID':'Student ID optional',ST.profile.verified],[r.trust?`Trust Score ≥ ${r.trust}`:'No Trust Score minimum',ST.trust.score>=r.trust]]; }
+function S23(){
+  const l=LISTINGS.find(x=>x.id===(cur().p?.id||'l1')); const ll=LANDLORDS[l.ll]; const rc=reqCheck(l); const okAll=rc.every(x=>x[1]);
+  const guard = fn => ST.guest ? sheet('guest') : fn();
+  return html`<div class="body"><div style="position:relative"><${Gallery} photos=${l.photos} h=${280}/><button class="back hide-web" aria-label="Back" style="position:absolute;top:10px;left:16px;background:rgba(11,10,46,.75)" onClick=${back}>${Ic('back',20)}</button><button class=${'heart'+(ST.saved[l.id]?' on':'')} style="top:10px;right:16px;width:42px;height:42px" aria-label="Save" onClick=${()=>set(s=>{s.saved[l.id]=!s.saved[l.id]})}>${Ic('heart',20)}</button></div>
+  <div class="pad" style="padding-top:16px">
+    <div class="h1">${l.title}</div><div class="muted small" style="margin-top:4px">${l.addr} · ${l.dist} km to AITU</div>
+    <div class="row" style="margin-top:10px"><span class="price" style="color:var(--mint);font-size:24px">${kzt(l.price)}</span><span class="muted small">/ month · deposit ${kzt(l.price)}</span></div>
+    <div class="grid3" style="grid-template-columns:repeat(4,1fr);margin-top:14px">${[[l.area+' m²','Area'],[l.floor,'Floor'],[l.rooms,'Rooms'],[l.cond.split(' ')[0],'Condition']].map(([v,k])=>html`<div class="kpi" style="padding:10px"><b style="font-size:15px">${v}</b><span>${k}</span></div>`)}</div>
+    <p style="line-height:1.55;margin:16px 0">${l.desc}</p>
+    <div class="card" style=${`border-color:${okAll?'var(--mint)':'var(--coral)'}`}><b>Tenant requirements</b><div class="list" style="gap:6px;margin-top:10px">${rc.map(([t,ok])=>html`<div class="row small"><span style=${`color:${ok?'var(--mint)':'var(--coral)'}`}>${Ic(ok?'check':'x',16)}</span>${t}</div>`)}</div>${okAll&&html`<div class="small" style="color:var(--mint);margin-top:10px;font-weight:600">You and your group meet all requirements</div>`}</div>
+    <button class="item tap" style="margin-top:12px" onClick=${()=>nav('S2.4',{id:l.ll})}><${Av} id=${l.ll} size=${46}/><div class="grow"><div class="t">${ll.name}</div><div class="s">${ll.verified?'Verified landlord':'Not verified yet'}${ll.rating?` · ${ll.rating} rating · ${ll.reviews} reviews`:''}</div></div><span class="chev">›</span></button>
+    <button class="small" style="color:var(--peri);margin:12px 0 0;font-weight:600" onClick=${()=>guard(()=>ST.app&&ST.app.lid===l.id?nav('M1.2',{id:'serik'}):toast('Chat with the landlord opens after you apply. This protects you from scams.'))}>Message the landlord</button>
+    <div class="btns" style="margin-top:18px"><button class="btn g" onClick=${()=>guard(()=>sheet('slots',{lid:l.id}))}>${ST.viewing[l.id]?'Viewing: '+ST.viewing[l.id]:'Book viewing'}</button><button class="btn p" onClick=${()=>guard(()=>ST.app&&ST.app.lid===l.id?nav('S4.3'):nav('S4.1',{id:l.id}))}>${ST.app&&ST.app.lid===l.id?'View application':'Apply'}</button></div>
+  </div></div>`;
+}
+function S24(){
+  const id=cur().p?.id||'serik'; const L=LANDLORDS[id];
+  return html`<div class="body"><${Top} title="Landlord profile"/><div class="pad">
+    <div class="row"><${Av} id=${id} size=${72}/><div><div class="h1">${L.name}</div><div class="muted small">On Campus Nest since ${L.since}</div>${L.verified?html`<span class="pill mint" style="margin-top:6px">${Ic('shield',13)} ID and ownership verified</span>`:html`<span class="pill coral" style="margin-top:6px">Not verified</span>`}</div></div>
+    ${L.rating?html`<div class="grid2" style="margin-top:16px"><div class="kpi"><b>${L.rating}</b><span><${Stars} n=${L.rating}/> rating</span></div><div class="kpi"><b>${L.reviews}</b><span>reviews from tenants</span></div></div>`:''}
+    <p style="line-height:1.5">${L.bio}</p>
+    <h3>Listings</h3><div class="list">${LISTINGS.filter(l=>l.ll===id&&l.status!=='moderation').map(l=>html`<${LCard} l=${l}/>`)}</div>
+    ${L.rating?html`<h3>Reviews</h3><div class="list">${[['aliya','Flat exactly as in the photos. Serik fixed the boiler in one day.'],['timur','Deposit came back on time. Recommend.'],['dana','Quiet building, good for studying.']].map(([p,t])=>html`<div class="card flat"><div class="row"><${Av} id=${p} size=${32}/><b class="small">${PEOPLE[p].name}</b><span class="small" style="margin-left:auto"><${Stars} n=${5}/></span></div><p class="small" style="line-height:1.5;margin:8px 0 0">${t}</p></div>`)}</div>`:''}
+  </div></div>`;
+}
+function S41(){
+  const l=LISTINGS.find(x=>x.id===(cur().p?.id||'l1'));
+  const [grp,setGrp]=useState(true); const [term,setTerm]=useState('10 months'); const [pets,setPets]=useState('No pets'); const [date,setDate]=useState('2026-09-01'); const [att,setAtt]=useState(true);
+  const people = grp?ST.group.members.length:1; const slot=ST.viewing[l.id];
+  const send = () => { set(s=>{ s.app={lid:l.id,group:grp,status:'pending',answers:{term,people,pets,move:date,viewing:slot||'Not booked'}}; s.ll.apps=null; }); toast('Application sent to '+LANDLORDS[l.ll].name); set(s=>{s.stack.student=[{id:'S0'},{id:'S4.3'}]}); };
+  return html`<div class="body"><${Top} title="Apply" sub=${l.title+' · questions set by the landlord'}/><div class="pad" style="padding-top:0">
+    <div class="card" style=${grp?'border-color:var(--lilac)':''}><div class="between"><div class="grow"><b>Apply as a group</b><div class="muted small">${grp?`${ST.group.name}, ${people} students · avg Trust ${groupStats().trustAvg}`:'Only you'}</div></div><${Sw} on=${grp} onClick=${()=>setGrp(!grp)} label="Apply as a group"/></div>${grp&&html`<div class="stack" style="margin-top:12px">${ST.group.members.map(id=>html`<${Av} id=${id} size=${36}/>`)}</div>`}</div>
+    <h3>Lease term</h3><div class="chips">${['5 months','10 months','12 months'].map(x=>html`<button class=${'chip'+(term===x?' on':'')} onClick=${()=>setTerm(x)}>${x}</button>`)}</div>
+    <h3>Number of people</h3><div class="chips"><span class="chip on">${people}</span><span class="muted small" style="align-self:center">${grp?'from your group':'just you'}</span></div>
+    <h3>Pets</h3><div class="chips">${['No pets','Cat','Dog'].map(x=>html`<button class=${'chip'+(pets===x?' on':'')} onClick=${()=>setPets(x)}>${x}</button>`)}</div>
+    <h3>Move-in date</h3><input class="inp" type="date" value=${date} onInput=${e=>setDate(e.target.value)}/>
+    <h3>Viewing</h3>${slot? html`<div class="between card flat"><span>${Ic('cal',18)} ${slot}</span><button class="small" style="color:var(--peri)" onClick=${()=>sheet('slots',{lid:l.id})}>Change</button></div>` : html`<button class="btn g" onClick=${()=>sheet('slots',{lid:l.id})}>Pick a viewing slot</button>`}
+    <div class="card flat" style="margin-top:16px"><div class="between"><div class="grow"><b>Attach Trust Scores</b><div class="muted small">Landlords see scores, never your documents</div></div><${Sw} on=${att} onClick=${()=>setAtt(!att)}/></div></div>
+    <button class="btn p" style="margin-top:22px" onClick=${send}>Send application</button>
+  </div></div>`;
+}
+function approveApp(){
+  set(s=>{ if(!s.app) s.app={lid:'l1',group:true,status:'pending',answers:{term:'10 months',people:s.group.members.length,pets:'No pets',move:'2026-09-01',viewing:'Sat 14:00'}}; s.app.status='approved'; const sg={landlord:true,me:false,guarantor:false}; s.group.members.filter(x=>x!=='me').forEach(m=>sg[m]=false); s.contract={lid:s.app.lid,sign:sg,done:false}; s.notifs.unshift({t:'Serik accepted your application',s:'Sign the lease contract',go:'M3.1',read:false}); });
+}
+function S43(){
+  const a=ST.app;
+  if(!a) return html`<div class="body"><${Top} title="Applications"/><div class="pad"><div class="empty"><div class="h1">No applications yet</div><p>Find a flat and apply with your group.</p><button class="btn p" onClick=${()=>root('S2.1')}>Find a flat</button></div></div></div>`;
+  const l=LISTINGS.find(x=>x.id===a.lid); const ap=a.status==='approved';
+  const tl=[['Application sent',`${a.group?'Joint application, '+a.answers.people+' students':'Solo application'}`,'done'],['Viewing',a.answers.viewing,a.answers.viewing!=='Not booked'?'done':''],["Landlord’s decision",ap?'Accepted by Serik':a.status==='rejected'?'Rejected':'Usually within 2 days',ap?'done':'now'],['Sign the contract','All members and a parent guarantor',ap&&!ST.contract?.done?'now':ST.contract?.done?'done':''],['Pay deposit into escrow','Held by the bank until move-in',ST.lease?'done':''],['Move in and check in','3 days to report problems','']];
+  return html`<div class="body"><${Top} title="Application" sub=${l.title}/><div class="pad">
+    <div class="card" style="display:flex;gap:12px;align-items:center;margin-bottom:18px"><img src=${photoSrc(l.photos[0])} style="width:64px;height:64px;border-radius:12px;object-fit:cover"/><div class="grow"><b>${l.title}</b><div class="muted small">${kzt(l.price)} / month</div></div><span class=${'pill '+(ap?'mint':a.status==='rejected'?'coral':'amber')}>${ap?'Accepted':a.status==='rejected'?'Rejected':'Pending'}</span></div>
+    <div class="timeline">${tl.map(([t,s,c])=>html`<div class=${'tl '+c}><b>${t}</b><div class="muted small">${s}</div></div>`)}</div>
+    ${ap? html`<button class="btn p" style="margin-top:8px" onClick=${()=>nav('M3.1')}>${ST.contract?.done?'Open contract':'Sign the contract'}</button>`
+      : html`<div class="col" style="margin-top:8px"><button class="btn s" onClick=${()=>{switchRole('landlord');set(s=>{s.stack.landlord=[{id:'L0'},{id:'L2'},{id:'L2.1',p:{id:'a1'}}]});toast('You are now in the landlord view');}}>See it as the landlord</button><button class="btn g" onClick=${()=>{approveApp();toast('Serik accepted your application');}}>Demo: skip to landlord approval</button></div>`}
+  </div></div>`;
+}
+function signMine(){
+  set(s=>{s.contract.sign.me=true}); toast('You signed the contract');
+  const others=Object.keys(ST.contract.sign).filter(k=>!ST.contract.sign[k]);
+  others.forEach((k,i)=>setTimeout(()=>{ set(s=>{ if(!s.contract) return; s.contract.sign[k]=true; if(Object.values(s.contract.sign).every(Boolean)) s.contract.done=true; }); if(ST.contract?.done) toast('Everyone signed. Pay the deposit to finish.'); },1000*(i+1)));
+}
+function M31(){
+  const c=ST.contract;
+  if(!c) return html`<div class="body"><${Top} title="Contract"/><div class="pad"><div class="empty"><div class="h1">No contract yet</div><p>A contract appears after a landlord accepts your application.</p></div></div></div>`;
+  const l=LISTINGS.find(x=>x.id===c.lid); const n=ST.group.members.length; const share=Math.round(l.price/n);
+  const label = k => k==='landlord'?LANDLORDS[l.ll].name+' · landlord':k==='guarantor'?'Parent guarantor (no account)':pname(k);
+  const avId = k => k==='landlord'?l.ll:k==='guarantor'?'gulnara':k;
+  return html`<div class="body"><${Top} title="Lease contract" sub="Generated from the accepted application"/><div class="pad" style="padding-top:0">
+    <div class="card"><div class="kv"><span>Address</span><span>${l.addr}</span></div><div class="kv"><span>Rent</span><span>${kzt(l.price)} / month</span></div><div class="kv"><span>Term</span><span>${ST.app?.answers.term||'10 months'} from ${ST.app?.answers.move||'1 Sep'}</span></div><div class="kv"><span>Deposit</span><span>${kzt(l.price)} in bank escrow</span></div><div class="kv"><span>Your share</span><span>${kzt(share)} / month</span></div></div>
+    <button class="small" style="color:var(--peri);margin-top:10px;font-weight:600" onClick=${()=>toast('Contract PDF opened (12 pages)')}>Read the full contract (PDF)</button>
+    <h3>Signatures</h3><div class="list">${Object.keys(c.sign).map(k=>html`<div class="item"><${Av} id=${avId(k)} size=${38}/><div class="grow"><div class="t" style="font-size:14px">${label(k)}</div>${k==='guarantor'&&!c.sign[k]&&html`<div class="s">One-time link + email code</div>`}</div>${c.sign[k]?html`<span class="pill mint">${Ic('check',13)} Signed</span>`:k==='guarantor'?html`<button class="pill peri" onClick=${()=>toast('Link sent again to the guarantor’s email')}>Resend link</button>`:html`<span class="pill amber">Waiting</span>`}</div>`)}</div>
+    ${!c.sign.me? html`<button class="btn p" style="margin-top:20px" onClick=${()=>sheet('sign')}>${Ic('lock',18)} Sign contract</button>`
+     : !c.done? html`<div class="card flat" style="margin-top:20px;text-align:center"><div class="spin" style="color:var(--peri);margin:6px auto 10px"></div><span class="muted small">Waiting for the others to sign…</span></div>`
+     : ST.lease? html`<button class="btn s" style="margin-top:20px" onClick=${()=>root('S5.1')}>Open my lease</button>`
+     : html`<button class="btn m" style="margin-top:20px" onClick=${()=>pay({amount:share,purpose:'Deposit share, '+l.addr,onDone:()=>{set(s=>{s.lease={lid:l.id,deposit:'escrow',since:'1 Sep 2026'};s.notifs.unshift({t:'Deposit is safe in escrow',s:'Check in with photos after you move in',go:'S5.2',read:false});s.stack.student=[{id:'S0'},{id:'S5.1'}];});toast('Deposit paid. It stays in escrow until check-in.');}})}>Pay deposit share: ${kzt(share)}</button>`}
+  </div></div>`;
+}
+function S51(){
+  const L=ST.lease;
+  if(!L) return html`<div class="body"><${Top} title="My lease"/><div class="pad"><div class="empty"><div class="h1">No active lease</div><p>After you sign a contract and pay the deposit, your lease appears here.</p><div class="col" style="margin-top:14px"><button class="btn p" onClick=${()=>root('S2.1')}>Find a flat</button>${ST.app?html`<button class="btn s" onClick=${()=>nav('S4.3')}>Open my application</button>`:''}</div></div></div></div>`;
+  const l=LISTINGS.find(x=>x.id===L.lid); const share=Math.round(l.price/ST.group.members.length);
+  const dep = ST.checkin.dispute?['coral','Frozen: dispute open']:L.deposit==='released'?['mint','Released to landlord']:['amber','In escrow'];
+  return html`<div class="body"><${Top} title="My lease" sub=${l.addr}/><div class="pad" style="padding-top:0">
+    <div class="lcard"><div class="ph"><img src=${photoSrc(l.photos[1]||l.photos[0])} alt=""/></div><div class="in"><b>${l.title}</b><div class="muted small">With ${ST.group.members.filter(x=>x!=='me').map(x=>PEOPLE[x].name).join(', ')} · since ${L.since}</div></div></div>
+    <div class="grid2" style="margin-top:12px"><div class="kpi"><span>Deposit</span><b style="font-size:16px"><span class=${'pill '+dep[0]}>${dep[1]}</span></b></div><div class="kpi"><span>Next rent</span><b>${kzt(share)}</b><span>due 1 October</span></div></div>
+    <div class="list" style="margin-top:14px">
+      ${[['camera','Move-in check-in',ST.checkin.done?'Done, deposit released':ST.checkin.dispute?'Dispute open':'Photos protect your deposit','S5.2',{},'var(--amber)'],['doc','Contract','Signed by everyone','M3.1',{},'var(--peri)'],['chat','Message the landlord','Serik B.','M1.2',{id:'serik'},'var(--mint)']].map(([i,t,s,go,p,c])=>html`<button class="item tap" onClick=${()=>nav(go,p)}><div class="tile" style=${`background:color-mix(in srgb, ${c} 20%, transparent);color:${c}`}>${Ic(i)}</div><div class="grow"><div class="t">${t}</div><div class="s">${s}</div></div><span class="chev">›</span></button>`)}
+    </div>
+    <h3>Rent payments</h3>${ST.trust.rent.length? html`<div class="card">${ST.trust.rent.map(r=>html`<div class="kv"><span>${r.m}</span><span style="color:var(--mint)">${kzt(r.a)} · on time</span></div>`)}</div>` : html`<p class="muted small">No payments yet. Paying in the app records them automatically.</p>`}
+    <div class="col" style="margin-top:16px"><button class="btn p" onClick=${()=>pay({amount:share,purpose:'Rent, '+(['October','November','December','January'][ST.trust.rent.length]||'February'),onDone:()=>{set(s=>{s.trust.rent.push({m:['October','November','December','January'][s.trust.rent.length]||'February',a:share});s.trust.score=Math.min(100,s.trust.score+3);});toast('Rent paid on time. Trust Score +3');}})}>Pay rent: ${kzt(share)}</button><button class="btn s" onClick=${()=>sheet('review',{target:'the flat and landlord'})}>Write a review</button></div>
+    <p class="muted small" style="text-align:center;margin-top:8px">Reviews open after the lease ends; open now for the demo.</p>
+  </div></div>`;
+}
+function S52(){
+  const c=ST.checkin; const rooms=['Kitchen','Bathroom','Bedroom','Living room'];
+  const [left,setLeft]=useState(2*86400+14*3600+12*60);
+  useEffect(()=>{const t=setInterval(()=>setLeft(x=>Math.max(0,x-1)),1000);return()=>clearInterval(t)},[]);
+  const all=Object.entries(c.photos).flatMap(([r,arr])=>arr.map(p=>p.src));
+  const hh=Math.floor(left%86400/3600), mm=Math.floor(left%3600/60), ss=left%60;
+  const addTo=(r,fs)=>set(s=>{s.checkin.photos[r]=[...(s.checkin.photos[r]||[]),...fs]});
+  const sample={Kitchen:['kitchen',0],Bathroom:['bath',0],Bedroom:['bedroom',0],'Living room':['living',0]};
+  const done=Object.keys(c.photos).filter(k=>c.photos[k]?.length).length;
+  return html`<div class="body"><${Top} title="Move-in check-in" sub="Photos protect your deposit"/><div class="pad" style="padding-top:0">
+    ${c.done? html`<div class="card" style="border-color:var(--mint)"><b style="color:var(--mint)">Check-in complete</b><p class="muted small" style="margin:6px 0 0">The deposit was released to the landlord. Your photos stay in the lease history.</p></div>`
+     : c.dispute? html`<div class="card" style="border-color:var(--coral)"><b style="color:var(--coral)">Dispute open</b><p class="muted small" style="margin:6px 0 0">${c.dispute.r}. A moderator decides within 5 working days. The deposit is frozen.</p></div>`
+     : html`<div class="card" style="border-color:var(--amber);background:rgba(246,198,103,.08)"><div class="small" style="color:var(--amber)">Time left to report problems</div><div style="font-family:var(--head);font-size:24px;margin-top:4px">${Math.floor(left/86400)} d ${hh} h ${String(mm).padStart(2,'0')} m ${String(ss).padStart(2,'0')} s</div><div class="muted small" style="margin-top:4px">If you do nothing, the deposit goes to the landlord automatically.</div></div>`}
+    <div class="between" style="margin:18px 0 10px"><b>${done} of ${rooms.length} rooms photographed</b><div class="bar" style="width:100px"><i style=${`width:${done/rooms.length*100}%`}></i></div></div>
+    ${rooms.map(r=>{const arr=c.photos[r]||[]; return html`<div style="margin-bottom:14px"><div class="between small" style="margin-bottom:6px"><b>${r}</b>${!arr.length&&!c.done&&html`<button style="color:var(--peri)" onClick=${()=>addTo(r,[{src:room(...sample[r]),name:'sample'}])}>Use sample photo</button>`}</div><div class="grid3">${arr.map((p,i)=>html`<${Photo} src=${p.src} h=${96} imgs=${all} i=${all.indexOf(p.src)} onRemove=${c.done?null:()=>set(s=>{s.checkin.photos[r]=s.checkin.photos[r].filter((_,j)=>j!==i)})}/>`)}${!c.done&&html`<${AddPhoto} h=${96} label="Add" onFiles=${fs=>addTo(r,fs)}/>`}</div></div>`;})}
+    ${!c.done&&!c.dispute&&html`<div class="col" style="margin-top:10px"><button class="btn p" disabled=${done<rooms.length} onClick=${()=>sheet('confirm',{title:'Everything is OK?',text:'The deposit will be released to the landlord now. You cannot open a dispute after this.',ok:'Release deposit',onOk:()=>{set(s=>{s.checkin.done=true;if(s.lease)s.lease.deposit='released';});toast('Deposit released to the landlord');}})}>Everything is OK</button><button class="btn d" onClick=${()=>sheet('dispute')}>Report a problem</button>${done<rooms.length&&html`<p class="muted small" style="text-align:center;margin:0">Add a photo of every room to finish</p>`}</div>`}
+  </div></div>`;
+}
+function S61(){
+  const t=ST.trust; const parts=[['On-time rent (main factor)',Math.min(45,20+t.rent.length*6),45],['Verified income documents',t.docs.filter(d=>d.status==='Approved').length*12,25],['Reviews from landlords',14,20],['Verified student ID',ST.profile.verified?10:0,10]];
+  const C2=2*Math.PI*64;
+  return html`<div class="body"><${Top} title="Trust Score" sub="What landlords see about your reliability"/><div class="pad" style="padding-top:0">
+    <div class="ring"><svg viewBox="0 0 150 150" width="150" height="150"><circle cx="75" cy="75" r="64" stroke="#2E2A8A" stroke-width="12" fill="none"/><circle cx="75" cy="75" r="64" stroke="#6FD6A0" stroke-width="12" fill="none" stroke-linecap="round" stroke-dasharray=${C2} stroke-dashoffset=${C2*(1-t.score/100)} transform="rotate(-90 75 75)" style="transition:stroke-dashoffset .6s"/></svg><b>${t.score}</b></div>
+    <p class="muted small" style="text-align:center;margin:0 0 16px">Landlords see the score, never your documents.</p>
+    <div class="card">${parts.map(([n,v,m])=>html`<div style="margin:8px 0"><div class="between small"><span>${n}</span><b>${v} / ${m}</b></div><div class="bar" style="margin-top:6px"><i style=${`width:${v/m*100}%`}></i></div></div>`)}</div>
+    <h3>Income documents <span class="muted small">(optional)</span></h3>
+    <div class="list">${t.docs.map(d=>html`<div class="item">${Ic('doc')}<div class="grow"><div class="t" style="font-size:14px">${d.name}</div></div><span class=${'pill '+(d.status==='Approved'?'mint':'amber')}>${d.status}</span></div>`)}</div>
+    <div style="margin-top:10px"><${AddPhoto} h=${80} label="Upload stipend, job or parents’ income proof" accept="image/*,.pdf" onFiles=${fs=>{const nm=fs[0].name||'document'; set(s=>{s.trust.docs.push({name:nm,status:'Pending review'})}); toast('Uploaded. A moderator checks it (A2.3).'); setTimeout(()=>{set(s=>{const d=s.trust.docs.find(x=>x.name===nm&&x.status!=='Approved'); if(d){d.status='Approved'; s.trust.score=Math.min(100,s.trust.score+3);}}); toast('Document approved. Trust Score +3');},3500);}}/></div>
+  </div></div>`;
+}
+function S7(){
+  const p=ST.profile;
+  const menu=[['spark','Lifestyle answers','Used for AI matching','S1.1'],['shield','Trust Score',ST.trust.score+' / 100','S6.1'],['key','Student ID','Verified by a moderator',null,()=>sheet('doc',{kind:'Student card'})],['lock','Security','Password, 2FA, devices','M5.1'],['bell','Notification settings','Choose what you get','M2.2'],['eye','Privacy Center','Export or delete data','M5.2'],['help','Help and reports','FAQ and support','M6.1']];
+  return html`<div class="body"><${Top} title="Profile" noBack=${true}/><div class="pad" style="padding-top:0">
+    <div class="card" style="text-align:center"><div style="display:flex;justify-content:center"><${Av} id="me" size=${86}/></div><div class="h1" style="margin-top:10px">Aruzhan Serikova</div><div class="muted small">${p.uni}, ${p.faculty}, year ${p.course}</div><div style="margin-top:8px"><span class="pill mint">${Ic('shield',13)} Student ID verified</span></div><p class="small" style="line-height:1.5;margin:12px 0 0">${p.bio}</p><button class="btn sm g" style="margin:12px auto 0" onClick=${()=>sheet('confirm',{title:'Edit profile',text:'In the full app this opens a form for photo, bio, faculty and languages.',ok:'OK'})}>${Ic('edit',16)} Edit profile</button></div>
+    <div class="list" style="margin-top:14px">${menu.map(([i,t,s,go,fn])=>html`<button class="item tap" onClick=${()=>fn?fn():nav(go)}><div class="tile" style="background:var(--s2)">${Ic(i)}</div><div class="grow"><div class="t">${t}</div><div class="s">${s}</div></div><span class="chev">›</span></button>`)}</div>
+    <button class="btn d" style="margin-top:18px" onClick=${()=>sheet('confirm',{title:'Log out?',text:'You will need your password and authenticator code to log in again.',ok:'Log out',danger:true,onOk:()=>{set(s=>{s.stack.student=[{id:'P0'}]});toast('Logged out');}})}>${Ic('out',18)} Log out</button>
+  </div></div>`;
+}
+</script>
+<script>
+ST.ll.st={a1:'new',a2:'new',a3:'rejected'};
+const photoSrc = p => Array.isArray(p) ? room(...p) : p.src;
+const LTITLE = {group:()=>ST.group.name, serik:()=>'Serik B.', 'L:dorm':()=>'Dorm 5 crew', 'L:timur':()=>'Timur'};
+const chatTitle = k => LTITLE[k] ? LTITLE[k]() : (PEOPLE[k]?.name||k);
+const chatAv = k => k==='group'||k==='L:dorm' ? 'mira' : k==='L:timur' ? 'timur' : k;
+const STARTERS = {sleep:'I usually sleep before 23:00. What time do you go to bed on weekdays?',guests:'How often would you like to have guests over?',clean:'How do you like to split cleaning?',budget:'What is the most you can pay for rent per month?',smoke:'Is smoking outside on the balcony OK for you?',pets:'How do you feel about pets in the flat?'};
+const REPLIES = {dana:['Sounds good! I sleep around 22:30 on weekdays.','Cleaning schedule on the fridge? I love that idea.','Want to see the flat on Kabanbay Batyr with me?'],timur:['Ha, Friday board games are sacred 😄 but I can keep it quiet.','I can host at a friend’s place instead.'],aliya:['Yes, still looking! My budget is up to 70k.'],group:['mira:Agree, let’s apply together!','ali:I can do 21k each, fine for me.','mira:I booked the viewing for Saturday.'],serik:['Welcome! The keys will be ready on 1 September.','Please send check-in photos in the app, it protects both of us.'],'L:dorm':['mira:Thank you! We will come on Saturday at 14:00.'],'L:timur':['Thanks, is the cat OK for you?']};
+
+/* ================= SHARED ================= */
+function M11(){
+  const keys = ST.role==='landlord' ? ['L:dorm','L:timur'] : ['group',...ST.matches.filter(id=>ST.chats[id]),...(ST.app?['serik']:[])];
+  return html`<div class="body"><${Top} title="Messages" noBack=${true}/><div class="pad" style="padding-top:0">
+    <div class="pill mint" style="margin-bottom:14px">${Ic('lock',13)} All chats are end-to-end encrypted</div>
+    <div class="list">${keys.map(k=>{const m=(ST.chats[k]||[]); const last=m[m.length-1]; const u=ST.unread[k]||0; return html`<button class="item tap" onClick=${()=>{set(s=>{s.unread[k]=0});nav('M1.2',{id:k});}}>${k==='group'||k==='L:dorm'?html`<div class="stack" style="width:52px"><${Av} id="mira" size=${34}/><${Av} id="ali" size=${34}/></div>`:html`<${Av} id=${chatAv(k)} size=${46}/>`}<div class="grow"><div class="t">${chatTitle(k)}</div><div class="s" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${last?(last.f==='me'?'You: ':'')+last.t:'Matched. Say hi!'}</div></div>${u?html`<span class="pill coral">${u}</span>`:''}</button>`;})}</div>
+  </div></div>`;
+}
+function M12(){
+  const k=cur().p?.id||'group'; const msgs=ST.chats[k]||[]; const [txt,setTxt]=useState(''); const box=useRef();
+  useEffect(()=>{ if(box.current) box.current.scrollTop=box.current.scrollHeight; });
+  const isP = !!PEOPLE[k] && ST.role==='student';
+  const r = isP ? reason(k) : null;
+  const starters = isP ? [...new Set([r.warnKey&&STARTERS[r.warnKey], STARTERS.clean, STARTERS.sleep].filter(Boolean))].slice(0,2) : [];
+  const send = t => { if(!t.trim()) return; set(s=>{ (s.chats[k]=s.chats[k]||[]).push({f:'me',t}); }); setTxt(''); const rs=REPLIES[k]; if(rs){ const n=(ST.chats[k]||[]).filter(m=>m.f!=='me').length; const rep=rs[n%rs.length]; setTimeout(()=>set(s=>{ const [who,body]=rep.includes(':')&&!rep.startsWith('http')&&rep.indexOf(':')<6?rep.split(/:(.+)/):['them',rep]; s.chats[k].push({f:who,t:body}); }),1300); } };
+  const sub = k==='group'?`${ST.group.members.length} members`: k==='serik'?'Landlord · verified': k.startsWith('L:')?'Applicants':`${score(ST.me,PEOPLE[k])}% match · online`;
+  return html`<div style="display:flex;flex-direction:column;flex:1;min-height:0">
+    <div class="top">${html`<button class="back" aria-label="Back" onClick=${back}>${Ic('back',20)}</button>`}<${Av} id=${chatAv(k)} size=${40}/><div class="grow"><h1 style="font-size:18px">${chatTitle(k)}</h1><div class="sub">${sub}</div></div><button class="iconbtn" aria-label="Report" onClick=${()=>sheet('report',{who:chatTitle(k)})}>${Ic('flag',20)}</button></div>
+    <div class="body" ref=${box}><div class="pad" style="display:flex;flex-direction:column;gap:10px">
+      <div class="pill mint" style="align-self:center">${Ic('lock',13)} End-to-end encrypted · phone numbers hidden</div>
+      ${starters.length>0&&html`<div class="ai"><div class="k">${Ic('spark',15)} Conversation starters</div><p class="small muted" style="margin-bottom:8px">Built from both profiles, never from your messages. Tap to use.</p><div class="col" style="gap:8px">${starters.map(s=>html`<button class="card flat tap" style="text-align:left;padding:10px 12px;font-size:13.5px;background:var(--s2)" onClick=${()=>setTxt(s)}>${s}</button>`)}</div></div>`}
+      ${!msgs.length&&!starters.length&&html`<p class="muted small" style="text-align:center">No messages yet.</p>`}
+      ${msgs.map(m=>m.f==='me'? html`<div class="bubble out">${m.t}</div>` : html`<div style="display:flex;gap:8px;align-items:flex-end">${(k==='group'||k==='L:dorm')&&html`<${Av} id=${m.f==='them'?'mira':m.f} size=${26}/>`}<div class="bubble in">${(k==='group'||k==='L:dorm')&&html`<div class="tag">${PEOPLE[m.f]?.name||'Mira'}</div>`}${m.t}</div></div>`)}
+      ${ST.role==='student'&&k==='timur'&&html`<div class="ai" style="border-color:var(--coral);background:rgba(255,138,128,.08)"><div class="k" style="color:var(--coral)">${Ic('shield',15)} Safety tip</div><p class="small">Never pay a deposit outside Campus Nest. Real landlords use bank escrow.</p></div>`}
+    </div></div>
+    <div class="composer"><input placeholder="Message" value=${txt} onInput=${e=>setTxt(e.target.value)} onKeyDown=${e=>{if(e.key==='Enter')send(txt)}} aria-label="Message"/><button class="send" aria-label="Send" onClick=${()=>send(txt)}>${Ic('send',20)}</button></div>
+  </div>`;
+}
+function M21(){
+  return html`<div class="body"><${Top} title="Notifications" right=${html`<button class="small" style="color:var(--peri)" onClick=${()=>set(s=>{s.notifs.forEach(n=>n.read=true)})}>Mark all read</button>`}/><div class="pad" style="padding-top:0"><div class="list">${ST.notifs.map((n,i)=>html`<button class="item tap" style=${n.read?'opacity:.7':''} onClick=${()=>{set(s=>{s.notifs[i].read=true});nav(n.go,n.p||{});}}><div class="tile" style="background:var(--s2)">${Ic('bell')}</div><div class="grow"><div class="t">${n.t}</div><div class="s">${n.s}</div></div>${!n.read&&html`<span style="width:9px;height:9px;border-radius:50%;background:var(--coral)"></span>`}</button>`)}</div></div></div>`;
+}
+function M22(){
+  const L=[['matches','New matches'],['messages','Messages'],['applications','Application updates'],['rent','Rent reminders'],['marketing','Tips and offers']];
+  return html`<div class="body"><${Top} title="Notification settings"/><div class="pad" style="padding-top:0"><div class="card">${L.map(([k,l])=>html`<div class="between" style="padding:10px 0"><span>${l}</span><${Sw} on=${ST.nset[k]} label=${l} onClick=${()=>set(s=>{s.nset[k]=!s.nset[k]})}/></div>`)}</div><p class="muted small" style="margin-top:12px">Security alerts, like a login from a new device, are always on.</p></div></div>`;
+}
+function M51(){
+  const sec=ST.security;
+  return html`<div class="body"><${Top} title="Security"/><div class="pad" style="padding-top:0">
+    <div class="card"><div class="between"><div class="grow"><b>Two-factor login (TOTP)</b><div class="muted small">Code from an authenticator app. SMS only as a backup.</div></div><${Sw} on=${sec.tfa} onClick=${()=>sec.tfa?sheet('confirm',{title:'Turn off 2FA?',text:'Your documents and payments will be protected only by a password. We do not recommend this.',ok:'Turn off',danger:true,onOk:()=>set(s=>{s.security.tfa=false})}):set(s=>{s.security.tfa=true})}/></div></div>
+    <button class="item tap" style="margin-top:10px" onClick=${()=>sheet('pwd')}><div class="tile" style="background:var(--s2)">${Ic('key')}</div><div class="grow"><div class="t">Change password</div><div class="s">Last changed 3 months ago</div></div><span class="chev">›</span></button>
+    <h3>Devices</h3><div class="list">${sec.sessions.map((d,i)=>html`<div class="item"><div class="grow"><div class="t" style="font-size:14px">${d.d}</div><div class="s">${d.now?'This device':'Active this week'}</div></div>${!d.now&&html`<button class="btn sm d" onClick=${()=>{set(s=>{s.security.sessions.splice(i,1)});toast('Device signed out');}}>Sign out</button>`}</div>`)}</div>
+  </div></div>`;
+}
+function M52(){
+  return html`<div class="body"><${Top} title="Privacy Center"/><div class="pad" style="padding-top:0">
+    <p class="muted" style="line-height:1.5;margin-top:0">Your data is stored on servers in Kazakhstan. We collect only what matching and verification need.</p>
+    <div class="list">${[['upload','Download my data','A ZIP archive by email within 24 h',()=>toast('Request received. The archive will arrive by email.')],['eye','What landlords see','Name, photo, Trust Score, ratings. Never documents.',()=>nav('S6.1')],['spark','AI matching data','Answers and likes. Never photos or chats.',()=>sheet('filters')],['x','Delete my account','Contracts are kept 5 years by law',()=>sheet('del')]].map(([i,t,s,fn])=>html`<button class="item tap" onClick=${fn}><div class="tile" style="background:var(--s2)">${Ic(i)}</div><div class="grow"><div class="t">${t}</div><div class="s">${s}</div></div><span class="chev">›</span></button>`)}</div>
+  </div></div>`;
+}
+function M61(){
+  const Q=[['How is my deposit protected?','You pay into a partner bank’s escrow account. After you move in, you have 3 days to report problems with photos. Without a dispute, the money goes to the landlord.'],['Who sees my documents?','Only you and a moderator. Landlords see your Trust Score, never the documents. ID scans are deleted after the check.'],['How does AI matching work?','It compares your lifestyle answers and learns from your likes which habits matter most to you. Your dealbreakers are never overridden.'],['Someone asks me to pay outside the app','Do not pay. Report the chat with the flag button. Real landlords on Campus Nest use bank escrow.']];
+  return html`<div class="body"><${Top} title="Help and reports"/><div class="pad" style="padding-top:0">${Q.map(([q,a])=>html`<details class="acc"><summary>${q}</summary><p>${a}</p></details>`)}<div class="col" style="margin-top:18px"><button class="btn s" onClick=${()=>toast('Support chat opened. Average reply: 10 minutes.')}>Chat with support</button><button class="btn d" onClick=${()=>sheet('report',{who:'a user or listing'})}>Report a user or listing</button></div></div></div>`;
+}
+
+/* ================= LANDLORD ================= */
+function llApps(){
+  const a=ST.app, g=ST.group.members;
+  return [
+    {id:'a1',lid:a?.lid||'l1',members:a&&!a.group?['me']:[...g],status:a?(a.status==='approved'?'accepted':a.status==='rejected'?'rejected':'new'):ST.ll.st.a1,answers:a?.answers||{term:'10 months',people:g.length,pets:'No pets',move:'2026-09-01',viewing:'Sat 14:00'},chat:'L:dorm'},
+    {id:'a2',lid:'l4',members:['timur'],status:ST.ll.st.a2,answers:{term:'12 months',people:1,pets:'Cat',move:'2026-09-15',viewing:'Sun 11:00'},chat:'L:timur'},
+    {id:'a3',lid:'l1',members:['aliya'],status:ST.ll.st.a3,answers:{term:'5 months',people:1,pets:'No pets',move:'2026-10-01',viewing:'Not booked'},chat:'L:timur'}
+  ];
+}
+function setApp(aid,status){
+  if(aid==='a1'){ if(status==='accepted') approveApp(); else set(s=>{ if(s.app) s.app.status='rejected'; s.ll.st.a1='rejected'; }); }
+  else set(s=>{s.ll.st[aid]=status});
+}
+const appName = a => a.members.length>1 ? ST.group.name : pname(a.members[0]).replace(' (you)','');
+const myListings = () => LISTINGS.filter(l=>l.ll==='serik');
+const VIEWS = {l1:1240,l4:610};
+function L0(){
+  const apps=llApps().filter(a=>a.status==='new');
+  return html`<div class="body"><div class="pad" style="padding-top:8px">
+    <div class="between hide-web"><div class="row"><${Av} id="serik" size=${48}/><div><div class="h1">Hello, Serik</div><span class="pill mint" style="margin-top:4px">${Ic('shield',13)} Verified landlord</span></div></div><button class="iconbtn" aria-label="Notifications" onClick=${()=>toast('2 new applications, 1 viewing today')}>${Ic('bell')}<span class="dot"></span></button></div>
+    <div class="grid3" style="margin-top:18px"><div class="kpi"><b>${fmt(myListings().reduce((t,l)=>t+(VIEWS[l.id]||40),0))}</b><span>Views</span></div><div class="kpi"><b>${apps.length}</b><span>New requests</span></div><div class="kpi"><b>${ST.lease?fmt(ST.trust.rent.length*85)+'k':'255k'}</b><span>Rent in</span></div></div>
+    <h3>New applications</h3>${apps.length? html`<div class="list">${apps.map(a=>{const l=LISTINGS.find(x=>x.id===a.lid); return html`<button class="item tap" style="border:1px solid var(--mint)" onClick=${()=>nav('L2.1',{id:a.id})}><div class="stack" style="width:${30+a.members.length*24}px">${a.members.slice(0,4).map(m=>html`<${Av} id=${m} size=${38}/>`)}</div><div class="grow"><div class="t">${appName(a)}</div><div class="s">${l.title} · viewing ${a.answers.viewing}</div></div><span class="chev">›</span></button>`;})}</div>` : html`<p class="muted small">No new applications. Promote a listing to get more.</p>`}
+    <h3>Promote “2-room flat near AITU”</h3>
+    <button class="item tap" onClick=${()=>sheet('promote',{lid:'l1'})}><div class="tile" style="background:rgba(246,198,103,.18);color:var(--amber)">${Ic('bolt')}</div><div class="grow"><div class="t">${ST.ll.promo.l1?ST.ll.promo.l1:'Free refresh or paid boost'}</div><div class="s">${ST.ll.promo.l1?'Active promotion':'Like OLX and Kaspi: move up in search'}</div></div><span class="chev">›</span></button>
+    <div class="card" style="margin-top:12px"><div class="between"><div><div class="muted small">Wallet</div><div class="price" style="font-size:22px">${kzt(ST.ll.wallet)}</div></div><button class="btn sm p" onClick=${()=>sheet('topup')}>Top up</button></div></div>
+    <div class="col" style="margin-top:16px"><button class="btn g" style="border-color:var(--mint);color:var(--mint)" onClick=${()=>nav('L1.1')}>${Ic('plus',18)} New listing</button><button class="btn s" onClick=${()=>nav('L2.2')}>${Ic('cal',18)} Viewing calendar</button></div>
+  </div></div>`;
+}
+function L1(){
+  return html`<div class="body"><${Top} title="My listings" noBack=${true} right=${html`<button class="iconbtn" aria-label="New listing" onClick=${()=>nav('L1.1')}>${Ic('plus')}</button>`}/><div class="pad" style="padding-top:0"><div class="list wgrid">${myListings().map(l=>{const st=l.status||'active'; return html`<button class="lcard tap" onClick=${()=>nav('L1.6',{id:l.id})}><div class="ph" style="height:140px"><img src=${photoSrc(l.photos[0])} alt=""/></div><div class="in"><div class="between"><b>${l.title}</b><span class=${'pill '+(st==='active'?'mint':st==='paused'?'coral':'amber')}>${st==='active'?'Active':st==='paused'?'Paused':'In moderation'}</span></div><div class="muted small" style="margin-top:4px">${kzt(l.price)} · ${VIEWS[l.id]||12} views${ST.ll.promo[l.id]?' · promoted':''}</div></div></button>`;})}</div></div></div>`;
+}
+function L16(){
+  const l=LISTINGS.find(x=>x.id===(cur().p?.id||'l1')); const st=l.status||'active'; const apps=llApps().filter(a=>a.lid===l.id).length;
+  return html`<div class="body"><div style="position:relative"><div style="height:240px">${l.photos.length&&Array.isArray(l.photos[0])?html`<${Gallery} photos=${l.photos} h=${240}/>`:html`<img src=${photoSrc(l.photos[0])} style="width:100%;height:240px;object-fit:cover"/>`}</div><button class="back hide-web" aria-label="Back" style="position:absolute;top:10px;left:16px;background:rgba(11,10,46,.75)" onClick=${back}>${Ic('back',20)}</button></div>
+  <div class="pad" style="padding-top:16px"><div class="between"><div class="h1">${l.title}</div><span class=${'pill '+(st==='active'?'mint':st==='paused'?'coral':'amber')}>${st==='active'?'Active':st==='paused'?'Paused':'In moderation'}</span></div><div class="muted small" style="margin-top:4px">${l.addr} · ${kzt(l.price)} / month</div>
+    <div class="grid3" style="margin-top:14px"><div class="kpi"><b>${VIEWS[l.id]||12}</b><span>Views</span></div><div class="kpi"><b>${Math.round((VIEWS[l.id]||12)/18)}</b><span>Saves</span></div><div class="kpi"><b>${apps}</b><span>Applications</span></div></div>
+    ${ST.ll.promo[l.id]&&html`<div class="pill amber" style="margin-top:12px">${Ic('bolt',13)} ${ST.ll.promo[l.id]}</div>`}
+    <div class="col" style="margin-top:18px"><button class="btn p" onClick=${()=>sheet('promote',{lid:l.id})}>${Ic('bolt',18)} Promote</button><button class="btn s" onClick=${()=>{switchRole('student');nav('S2.3',{id:l.id});}}>${Ic('eye',18)} See it as a student</button><button class="btn g" onClick=${()=>{set(s=>{const x=LISTINGS.find(y=>y.id===l.id);x.status=st==='paused'?'active':'paused';});toast(st==='paused'?'Listing is live again':'Listing paused. Students cannot see it.');}}>${st==='paused'?'Resume listing':'Pause listing'}</button></div>
+  </div></div>`;
+}
+function L11(){
+  const [step,setStep]=useState(0); const [d,setD]=useState({title:'1-room flat near Expo',type:'Apartment',area:38,floor:'6 / 12',price:72000,cond:'Good',addr:'Turan 37',desc:'Cosy flat, 7 minutes to AITU by bus. New furniture and a washing machine.'});
+  const [ph,setPh]=useState([]); const [pin,setPin]=useState({x:.4,y:.55}); const [rq,setRq]=useState({rating:4,years:true,sid:true,trust:60,pets:false}); const [fields,setFields]=useState(['Lease term','Number of people','Pets','Move-in date']);
+  const steps=['Details','Photos','Location','Tenant rules','Application form'];
+  const u=(k,v)=>setD({...d,[k]:v});
+  const publish=()=>{ const id='n'+Date.now(); LISTINGS.push({id,title:d.title,type:d.type,addr:d.addr,dist:1.6,price:+d.price,area:+d.area,floor:d.floor,rooms:1,cond:d.cond,pets:rq.pets,promoted:false,verified:true,ll:'serik',photos:ph.length?ph:[['exterior',2],['living',3]],req:{rating:rq.rating,years:rq.years?1:0,sid:rq.sid,trust:rq.trust},desc:d.desc,mx:pin.x,my:pin.y,status:'moderation'}); VIEWS[id]=0; set(s=>{s.stack.landlord=[{id:'L0'},{id:'L1'}]}); toast('Published. A moderator checks it before students see it.'); setTimeout(()=>{const x=LISTINGS.find(y=>y.id===id); if(x){x.status='active';VIEWS[id]=3;} set(s=>{}); toast('Moderator approved your listing. It is live.');},4000); };
+  return html`<div class="body"><${Top} title="New listing" sub=${`Step ${step+1} of 5 · ${steps[step]}`}/><div class="step">${steps.map((_,i)=>html`<i class=${i<=step?'on':''}></i>`)}</div><div class="pad">
+    ${step===0&&html`<div class="field"><label>Title</label><input class="inp" value=${d.title} onInput=${e=>u('title',e.target.value)}/></div><div class="field"><label>Type</label><div class="chips">${['Apartment','Room','Studio','Dormitory'].map(t=>html`<button class=${'chip'+(d.type===t?' on':'')} onClick=${()=>u('type',t)}>${t}</button>`)}</div></div><div class="grid2"><div class="field"><label>Area, m²</label><input class="inp" type="number" value=${d.area} onInput=${e=>u('area',e.target.value)}/></div><div class="field"><label>Floor</label><input class="inp" value=${d.floor} onInput=${e=>u('floor',e.target.value)}/></div><div class="field"><label>Price per month, KZT</label><input class="inp" type="number" value=${d.price} onInput=${e=>u('price',e.target.value)}/></div><div class="field"><label>Condition</label><select class="inp" onChange=${e=>u('cond',e.target.value)}>${['New building','Renovated','Good','Needs light repair'].map(x=>html`<option selected=${x===d.cond}>${x}</option>`)}</select></div></div><div class="field"><label>Description</label><textarea class="inp" value=${d.desc} onInput=${e=>u('desc',e.target.value)}></textarea></div>`}
+    ${step===1&&html`<p class="muted small" style="margin-top:0">Add at least 3 photos and an optional video tour. The first photo is the cover.</p><div class="grid3">${ph.map((p,i)=>html`<${Photo} src=${p.src} h=${100} imgs=${ph.map(x=>x.src)} i=${i} label=${i===0?'Cover':''} onRemove=${()=>setPh(ph.filter((_,j)=>j!==i))}/>`)}<${AddPhoto} h=${100} label="Add photos" onFiles=${fs=>setPh([...ph,...fs])}/></div><button class="small" style="color:var(--peri);margin-top:12px;font-weight:600" onClick=${()=>setPh([...ph,...[['living',3],['bedroom',3],['kitchen',3],['bath',3]].map(p=>({src:room(...p)}))])}>Add sample photos (demo)</button><div style="margin-top:14px"><${AddPhoto} h=${70} label="Add a video tour" multiple=${false} accept="video/*" onFiles=${()=>toast('Video added. It will be processed in a few minutes.')}/></div>`}
+    ${step===2&&html`<div class="field"><label>Address</label><input class="inp" value=${d.addr} onInput=${e=>u('addr',e.target.value)}/></div><p class="muted small">Tap the map to place the pin exactly.</p><div class="mapbox" style="cursor:crosshair" onClick=${e=>{const r=e.currentTarget.getBoundingClientRect();setPin({x:(e.clientX-r.left)/r.width,y:(e.clientY-r.top)/r.height});}}><div dangerouslySetInnerHTML=${{__html:mapArt(360,260)}}></div><span class="pin" style="left:55%;top:44%;background:var(--amber);color:#1A1406;border-color:var(--amber)">AITU</span><span class="pin on" style=${`left:${pin.x*100}%;top:${pin.y*100}%`}>${Ic('pin',14)}</span></div>`}
+    ${step===3&&html`<p class="muted small" style="margin-top:0">Only students who meet these rules can apply. You will not get random messages.</p><div class="card"><div class="between" style="padding:8px 0"><span>Minimum rating</span><div class="row"><button class="btn sm s" onClick=${()=>setRq({...rq,rating:Math.max(0,rq.rating-.5)})}>–</button><b>${rq.rating||'Any'}</b><button class="btn sm s" onClick=${()=>setRq({...rq,rating:Math.min(5,rq.rating+.5)})}>+</button></div></div>${[['years','Account at least 1 year old'],['sid','Verified student ID'],['pets','Pets allowed']].map(([k,l])=>html`<div class="between" style="padding:10px 0"><span>${l}</span><${Sw} on=${rq[k]} onClick=${()=>setRq({...rq,[k]:!rq[k]})}/></div>`)}<div style="padding:10px 0"><div class="between"><span>Minimum Trust Score</span><b>${rq.trust}</b></div><input type="range" min="0" max="90" step="5" value=${rq.trust} style="width:100%;margin-top:8px" onInput=${e=>setRq({...rq,trust:+e.target.value})}/></div></div>`}
+    ${step===4&&html`<p class="muted small" style="margin-top:0">Students answer these questions when they apply.</p><div class="list">${fields.map((f,i)=>html`<div class="item"><span class="grow">${f}</span><button aria-label="Remove question" onClick=${()=>setFields(fields.filter((_,j)=>j!==i))}>${Ic('x',18)}</button></div>`)}</div><h3>Add a question</h3><div class="chips">${['Do you smoke?','Monthly income source','University and year','Lease start flexibility','Will guests stay overnight?'].filter(x=>!fields.includes(x)).map(x=>html`<button class="chip" onClick=${()=>setFields([...fields,x])}>+ ${x}</button>`)}</div>`}
+    <div class="btns" style="margin-top:24px">${step>0&&html`<button class="btn s" onClick=${()=>setStep(step-1)}>Back</button>`}${step<4? html`<button class="btn p" disabled=${step===1&&ph.length<3} onClick=${()=>setStep(step+1)}>Continue</button>` : html`<button class="btn m" onClick=${publish}>Publish listing</button>`}</div>
+    ${step===1&&ph.length<3&&html`<p class="muted small" style="text-align:center">${3-ph.length} more photo${3-ph.length>1?'s':''} needed</p>`}
+  </div></div>`;
+}
+function L2(){
+  const [tab,setTab]=useState('new'); const apps=llApps().filter(a=>a.status===tab);
+  return html`<div class="body"><${Top} title="Applications" noBack=${true}/><div class="pad" style="padding-top:0"><div class="seg" style="background:var(--s1);border-color:var(--line)">${[['new','New'],['accepted','Accepted'],['rejected','Rejected']].map(([k,l])=>html`<button class=${tab===k?'on':''} style=${tab===k?'':'color:var(--muted)'} onClick=${()=>setTab(k)}>${l}</button>`)}</div>
+    <div class="list" style="margin-top:12px">${apps.length?apps.map(a=>{const l=LISTINGS.find(x=>x.id===a.lid); return html`<button class="item tap" onClick=${()=>nav('L2.1',{id:a.id})}><div class="stack" style="width:${30+Math.min(4,a.members.length)*22}px">${a.members.slice(0,4).map(m=>html`<${Av} id=${m} size=${36}/>`)}</div><div class="grow"><div class="t">${appName(a)}</div><div class="s">${l.title} · ${a.members.length>1?a.members.length+' students':'solo'}</div></div><span class="chev">›</span></button>`;}):html`<p class="muted small">Nothing here.</p>`}</div></div></div>`;
+}
+function L21(){
+  const a=llApps().find(x=>x.id===(cur().p?.id||'a1')); const l=LISTINGS.find(x=>x.id===a.lid); const ps=a.members.map(person);
+  let comp=null; if(ps.length>1){let t=0,c=0;for(let i=0;i<ps.length;i++)for(let j=i+1;j<ps.length;j++){t+=score(ps[i],ps[j]);c++;}comp=Math.round(t/c);}
+  const avgT=Math.round(a.members.reduce((t,m)=>t+trustOf(m),0)/a.members.length);
+  const meets = avgT>=l.req.trust;
+  return html`<div class="body"><${Top} title="Application" sub=${'Landlord view · '+l.title}/><div class="pad" style="padding-top:0">
+    <div class="card" style="border-color:var(--mint)"><div class="between"><b style="font-size:17px">${appName(a)}</b><span class=${'pill '+(a.status==='new'?'amber':a.status==='accepted'?'mint':'coral')}>${a.status==='new'?'New':a.status==='accepted'?'Accepted':'Rejected'}</span></div>
+      <div class="list" style="margin-top:12px;gap:8px">${a.members.map(m=>html`<div class="row"><${Av} id=${m} size=${36}/><div class="grow small"><b>${pname(m).replace(' (you)','')}</b><div class="muted">Student ID verified</div></div><span class="pill peri">Trust ${trustOf(m)}</span></div>`)}</div>
+      <div class="grid3" style="margin-top:12px">${[[comp?comp+'%':'—','compatibility'],[avgT,'avg Trust'],['4.6','rating']].map(([v,k])=>html`<div><b style="font-family:var(--head);font-size:18px">${v}</b><div class="muted small">${k}</div></div>`)}</div></div>
+    <h3>Answers to your questions</h3><div class="card"><div class="kv"><span>Lease term</span><span>${a.answers.term}</span></div><div class="kv"><span>People</span><span>${a.answers.people}</span></div><div class="kv"><span>Pets</span><span>${a.answers.pets}</span></div><div class="kv"><span>Move-in</span><span>${a.answers.move}</span></div><div class="kv"><span>Viewing</span><span>${a.answers.viewing}</span></div></div>
+    <div class="card" style=${`margin-top:12px;border-color:${meets?'var(--mint)':'var(--coral)'};background:${meets?'rgba(111,214,160,.08)':'rgba(255,138,128,.08)'}`}><b style=${`color:${meets?'var(--mint)':'var(--coral)'}`}>${meets?'Meets all your tenant rules':'Below your Trust Score minimum'}</b><div class="muted small" style="margin-top:4px">Documents stay private. You see scores and verification status only.</div></div>
+    <button class="small" style="color:var(--peri);margin:14px 0 0;font-weight:600" onClick=${()=>nav('M1.2',{id:a.chat})}>Message the applicants</button>
+    ${a.status==='new'? html`<div class="btns" style="margin-top:18px"><button class="btn d" onClick=${()=>sheet('reject',{aid:a.id})}>Reject</button><button class="btn s" onClick=${()=>nav('M1.2',{id:a.chat})}>Ask</button><button class="btn p" onClick=${()=>sheet('confirm',{title:'Accept '+appName(a)+'?',text:'A lease contract is generated from the application and sent to every student and their guarantor for signing.',ok:'Accept and send contract',onOk:()=>{setApp(a.id,'accepted');toast('Accepted. Contract sent for signing.');}})}>Accept</button></div>`
+     : a.status==='accepted' ? html`<div class="col" style="margin-top:18px"><button class="btn s" onClick=${()=>nav('L3')}>Open lease</button>${a.id==='a1'&&html`<button class="btn g" onClick=${()=>{switchRole('student');set(s=>{s.stack.student=[{id:'S0'},{id:'M3.1'}]});toast('Back in the student view');}}>Continue as the student</button>`}</div>` : ''}
+  </div></div>`;
+}
+function L22(){
+  const days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'], times=['11:00','14:00','18:30','19:00'];
+  return html`<div class="body"><${Top} title="Viewing calendar" sub="Students book only the slots you open"/><div class="pad" style="padding-top:0">
+    <div style="display:grid;grid-template-columns:52px repeat(7,1fr);gap:4px;font-size:11.5px">${['',...days].map(d=>html`<div style="text-align:center;color:var(--muted);padding:4px 0">${d}</div>`)}${times.map(t=>html`<div style="color:var(--muted);align-self:center">${t}</div>${days.map(d=>{const k=d+' '+t; const on=ST.ll.slots.includes(k); const booked=k==='Sat 14:00'||k==='Sun 11:00'; return html`<button aria-label=${k} style=${`height:38px;border-radius:9px;border:1px solid ${booked?'var(--amber)':on?'var(--peri)':'var(--line)'};background:${booked?'rgba(246,198,103,.25)':on?'rgba(140,158,255,.2)':'transparent'}`} onClick=${()=>booked?toast('Booked: '+(k==='Sat 14:00'?'Dorm 5 crew':'Timur')):set(s=>{s.ll.slots=on?s.ll.slots.filter(x=>x!==k):[...s.ll.slots,k]})}></button>`;})}`)}</div>
+    <div class="row small" style="margin-top:12px;gap:14px"><span><span class="pill peri">■</span> Open</span><span><span class="pill amber">■</span> Booked</span></div>
+    <h3>Booked viewings</h3><div class="list"><div class="item"><div class="stack" style="width:78px"><${Av} id="me" size=${32}/><${Av} id="ali" size=${32}/><${Av} id="mira" size=${32}/></div><div class="grow"><div class="t">Dorm 5 crew</div><div class="s">Sat 14:00 · 2-room flat near AITU</div></div></div><div class="item"><${Av} id="timur" size=${36}/><div class="grow"><div class="t">Timur</div><div class="s">Sun 11:00 · 3-room flat for a group</div></div></div></div>
+  </div></div>`;
+}
+function L3(){
+  const L=ST.lease; const photos=Object.entries(ST.checkin.photos).flatMap(([r,a])=>a.map(p=>({...p,r}))); const all=photos.map(p=>p.src);
+  return html`<div class="body"><${Top} title="Leases"/><div class="pad" style="padding-top:0">
+    ${L? html`<div class="card"><div class="between"><b>2-room flat near AITU</b><span class="pill mint">Active</span></div><div class="stack" style="margin-top:10px">${ST.group.members.map(m=>html`<${Av} id=${m} size=${34}/>`)}</div><div class="kv" style="margin-top:10px"><span>Deposit</span><span>${ST.checkin.dispute?'Frozen: dispute':L.deposit==='released'?'Released to you':'In escrow until check-in'}</span></div><div class="kv"><span>Rent received</span><span>${ST.trust.rent.length} of 10 months</span></div></div>
+      <h3>Tenants’ check-in photos</h3>${photos.length? html`<div class="grid3">${photos.map((p,i)=>html`<${Photo} src=${p.src} h=${92} label=${p.r} imgs=${all} i=${i}/>`)}</div>` : html`<p class="muted small">Tenants have not uploaded check-in photos yet. You will be notified.</p>`}
+      ${ST.checkin.dispute&&html`<div class="ai" style="margin-top:12px;border-color:var(--coral);background:rgba(255,138,128,.08)"><div class="k" style="color:var(--coral)">Dispute opened</div><p>${ST.checkin.dispute.r}. Add your evidence; a moderator decides within 5 working days.</p></div>`}
+      <h3>Rent payments</h3>${ST.trust.rent.length? html`<div class="card">${ST.trust.rent.map(r=>html`<div class="kv"><span>${r.m}</span><span style="color:var(--mint)">Received automatically</span></div>`)}</div>` : html`<p class="muted small">Payments made in the app appear here automatically. They cannot be marked by hand.</p>`}
+      <button class="btn s" style="margin-top:12px" onClick=${()=>sheet('review',{target:'your tenants'})}>Review tenants</button>`
+    : html`<div class="card"><b>No active lease yet</b><p class="muted small" style="margin:6px 0 0">Accept an application; after everyone signs and pays the deposit, the lease appears here.</p><button class="btn sm p" style="margin-top:12px" onClick=${()=>nav('L2')}>Open applications</button></div>`}
+    <h3>Archive</h3><div class="item"><img src=${room('living',3)} style="width:52px;height:52px;border-radius:12px;object-fit:cover"/><div class="grow"><div class="t">3-room flat for a group</div><div class="s">Sep 2025 – Jun 2026 · deposit returned</div></div></div>
+  </div></div>`;
+}
+function L4(){
+  const tx=[['Top of search, 7 days','-1 500'],['Wallet top-up','+5 000'],['Rent, Dorm 5 crew','+85 000'],['Deposit released','+85 000']];
+  return html`<div class="body"><${Top} title="Wallet and payouts"/><div class="pad" style="padding-top:0">
+    <div class="card"><div class="muted small">Promotion wallet</div><div class="price" style="font-size:30px;margin:4px 0 12px">${kzt(ST.ll.wallet)}</div><button class="btn p" onClick=${()=>sheet('topup')}>Top up</button></div>
+    <h3>Payout account</h3><button class="item tap" onClick=${()=>sheet('iban')}><div class="tile" style="background:var(--s2)">${Ic('wallet')}</div><div class="grow"><div class="t">IBAN •••• 0100</div><div class="s">${ST.ll.ibanHold?'Changed: payouts paused for 48 h':'Rent and deposits arrive here'}</div></div><span class="chev">›</span></button>
+    <h3>History</h3><div class="card">${tx.map(([t,a])=>html`<div class="kv"><span>${t}</span><span style=${a[0]==='+'?'color:var(--mint)':''}>${a} KZT</span></div>`)}</div>
+  </div></div>`;
+}
+function L5(){
+  const docs=[['Passport / ID card','Verified',true],['Selfie match','Verified',true],...myListings().map(l=>['Ownership: '+l.title,l.status==='moderation'?'Pending review':'Verified',l.status!=='moderation'])];
+  return html`<div class="body"><${Top} title="Verification" sub="Verified landlords get a badge and more applications"/><div class="pad" style="padding-top:0">
+    <div class="card" style="border-color:var(--mint);text-align:center"><div style="color:var(--mint)">${Ic('shield',40)}</div><b>Verified landlord</b><p class="muted small" style="margin:6px 0 0">Students see a check mark on your profile and every listing.</p></div>
+    <h3>Documents</h3><div class="list">${docs.map(([t,s,ok])=>html`<button class="item tap" onClick=${()=>sheet('doc',{kind:t})}>${Ic('doc')}<div class="grow"><div class="t" style="font-size:14px">${t}</div><div class="s">${ok?'Checked by a moderator · scan deleted':'Upload title deed or technical passport'}</div></div><span class=${'pill '+(ok?'mint':'amber')}>${s}</span></button>`)}</div>
+  </div></div>`;
+}
+function L7(){
+  const L=LANDLORDS.serik;
+  return html`<div class="body"><${Top} title="Profile" noBack=${true}/><div class="pad" style="padding-top:0">
+    <div class="card" style="text-align:center"><div style="display:flex;justify-content:center"><${Av} id="serik" size=${86}/></div><div class="h1" style="margin-top:10px">Serik Bekov</div><div class="muted small">Landlord since ${L.since} · ${L.rating} rating</div><p class="small" style="line-height:1.5;margin:10px 0 0">${L.bio}</p><button class="btn sm g" style="margin:12px auto 0" onClick=${()=>{switchRole('student');nav('S2.4',{id:'serik'});}}>${Ic('eye',16)} See public profile</button></div>
+    <div class="list" style="margin-top:14px">${[['shield','Verification','ID and ownership','L5'],['wallet','Wallet and payouts',kzt(ST.ll.wallet),'L4'],['doc','Leases','Contracts and check-ins','L3'],['cal','Viewing calendar','Open slots','L2.2'],['lock','Security','Password, 2FA, devices','M5.1'],['bell','Notification settings','','M2.2'],['eye','Privacy Center','','M5.2'],['help','Help and reports','','M6.1']].map(([i,t,s,go])=>html`<button class="item tap" onClick=${()=>nav(go)}><div class="tile" style="background:var(--s2)">${Ic(i)}</div><div class="grow"><div class="t">${t}</div>${s&&html`<div class="s">${s}</div>`}</div><span class="chev">›</span></button>`)}</div>
+    <button class="btn d" style="margin-top:18px" onClick=${()=>sheet('confirm',{title:'Log out?',text:'You will need your password and authenticator code to log in again.',ok:'Log out',danger:true,onOk:()=>{set(s=>{s.role='student';s.stack.student=[{id:'P0'}]});toast('Logged out');}})}>${Ic('out',18)} Log out</button>
+  </div></div>`;
+}
+
+/* ================= REGISTRY ================= */
+const SCREENS = {
+  P0:{t:'Welcome',r:'any',c:P0,auth:1},P3:{t:'Log in',r:'any',c:P3,auth:1},P4:{t:'Create account',r:'any',c:P4,auth:1},
+  S0:{t:'Home',r:'student',c:S0},'S1.1':{t:'Lifestyle questionnaire',r:'student',c:S11,noTab:1},'S1.2':{t:'Roommates',r:'student',c:S12},'S1.3':{t:'Matches',r:'student',c:S13},'S3.2':{t:'My group',r:'student',c:S32},
+  'S2.1':{t:'Housing',r:'student',c:S21,wide:1},'S2.3':{t:'Listing',r:'student',c:S23,noTab:1},'S2.4':{t:'Landlord profile',r:'student',c:S24},'S4.1':{t:'Apply',r:'student',c:S41,noTab:1},'S4.3':{t:'Application',r:'student',c:S43},
+  'M3.1':{t:'Lease contract',r:'student',c:M31,noTab:1},'S5.1':{t:'My lease',r:'student',c:S51},'S5.2':{t:'Move-in check-in',r:'student',c:S52},'S6.1':{t:'Trust Score',r:'student',c:S61},S7:{t:'Profile',r:'student',c:S7},
+  'M1.1':{t:'Messages',r:'any',c:M11},'M1.2':{t:'Chat',r:'any',c:M12,noTab:1,full:1},'M2.1':{t:'Notifications',r:'student',c:M21},'M2.2':{t:'Notification settings',r:'any',c:M22},'M5.1':{t:'Security',r:'any',c:M51},'M5.2':{t:'Privacy Center',r:'any',c:M52},'M6.1':{t:'Help and reports',r:'any',c:M61},
+  L0:{t:'Dashboard',r:'landlord',c:L0},L1:{t:'My listings',r:'landlord',c:L1,wide:1},'L1.1':{t:'New listing',r:'landlord',c:L11,noTab:1},'L1.6':{t:'Manage listing',r:'landlord',c:L16},L2:{t:'Applications',r:'landlord',c:L2},'L2.1':{t:'Application review',r:'landlord',c:L21},'L2.2':{t:'Viewing calendar',r:'landlord',c:L22},L3:{t:'Leases',r:'landlord',c:L3},L4:{t:'Wallet and payouts',r:'landlord',c:L4},L5:{t:'Verification',r:'landlord',c:L5},L7:{t:'Profile',r:'landlord',c:L7}
+};
+const DEF = {'S2.3':{id:'l1'},'S2.4':{id:'serik'},'S4.1':{id:'l1'},'M1.2':{id:'dana'},'L1.6':{id:'l1'},'L2.1':{id:'a1'}};
+const TABS = {student:[['S0','Home','home'],['S1.2','Roommates','users'],['S2.1','Housing','house'],['M1.1','Messages','chat'],['S7','Profile','user']],landlord:[['L0','Dashboard','home'],['L1','Listings','house'],['L2','Requests','doc'],['M1.1','Messages','chat'],['L7','Profile','user']]};
+const SIDE = {student:[['S0','Home','home'],['S1.2','Roommates','users'],['S1.3','Matches','heart'],['S3.2','My group','spark'],['S2.1','Housing','house'],['S4.3','Application','doc'],['S5.1','My lease','key'],['S6.1','Trust Score','shield'],['M1.1','Messages','chat'],['S7','Profile','user']],landlord:[['L0','Dashboard','home'],['L1','Listings','house'],['L2','Applications','doc'],['L2.2','Viewings','cal'],['L3','Leases','key'],['L4','Wallet','wallet'],['L5','Verification','shield'],['M1.1','Messages','chat'],['L7','Profile','user']]};
+const unreadAll = () => Object.entries(ST.unread).reduce((t,[k,v])=>t+(ST.role==='landlord'?0:v),0);
+
+/* ================= SHELLS ================= */
+function activeTab(){ const st=ST.stack[ST.role]; const ids=TABS[ST.role].map(t=>t[0]); for(let i=st.length-1;i>=0;i--) if(ids.includes(st[i].id)) return st[i].id; return ids[0]; }
+function Tabbar(){ const a=activeTab(); return html`<nav class="tabbar">${TABS[ST.role].map(([id,l,i])=>html`<button class=${a===id?'on':''} onClick=${()=>root(id)}>${Ic(i,24)}${l}${id==='M1.1'&&unreadAll()>0&&html`<span class="badge">${unreadAll()}</span>`}</button>`)}</nav>`; }
+function Overlays(){ return html`<${Sheet}/><${Lightbox}/><${Ext}/><${Toast}/>`; }
+function Phone(){
+  const c=cur(); const m=SCREENS[c.id]; const C=m.c;
+  return html`<div class="phone"><div class="screen"><div class="notch"></div><div class="sbar"><span>9:41</span><span style="font-size:12px">5G  100%</span></div>
+    <${C} key=${c.id+JSON.stringify(c.p||{})}/>
+    ${!m.auth&&!m.noTab&&html`<${Tabbar}/>`}<${Overlays}/></div></div>`;
+}
+function Web(){
+  const c=cur(); const m=SCREENS[c.id]; const C=m.c; const st=ST.stack[ST.role];
+  const url='campusnest.kz/'+(m.auth?'':ST.role+'/')+c.id.toLowerCase().replace('.','-');
+  return html`<div class="browser"><div class="bbar"><i></i><i></i><i></i><div class="url">${Ic('lock',13)} <span style="margin-left:6px">${url}</span></div></div>
+    <div class="wscreen web">${m.auth? html`<div class="wmain" style="align-items:center;overflow:auto"><div style="width:440px;padding:30px 0;display:flex;flex-direction:column;min-height:100%"><${C} key=${c.id}/></div></div>`
+    : html`<aside class="side"><div class="brand">Campus Nest</div><div class="who">${ST.role==='student'?'Student':'Landlord'} · web</div>${SIDE[ST.role].map(([id,l,i])=>html`<button class=${st[0].id===id&&st.length===1||c.id===id?'on':''} onClick=${()=>root(id)}>${Ic(i,19)}${l}${id==='M1.1'&&unreadAll()>0&&html`<span class="pill coral" style="margin-left:auto">${unreadAll()}</span>`}</button>`)}</aside>
+      <div class=${'wmain'+(m.wide?' wide':'')}><div class="wtop">${st.length>1&&html`<button class="back" aria-label="Back" onClick=${back}>${Ic('back',20)}</button>`}<div class="t">${m.t}</div>${ST.role==='student'&&html`<button class="iconbtn" aria-label="Notifications" onClick=${()=>nav('M2.1')}>${Ic('bell')}${ST.notifs.some(n=>!n.read)&&html`<span class="dot"></span>`}</button>`}<${Av} id=${ST.role==='student'?'me':'serik'} size=${38}/></div>
+      <div class="wbody" style=${m.full?'display:flex;flex-direction:column;padding:0 28px;overflow:hidden':''}><div class=${'cnt'+(m.wide?' wide':'')} style=${m.full?'flex:1;display:flex;flex-direction:column;min-height:0;max-width:760px;width:100%':''}><${C} key=${c.id+JSON.stringify(c.p||{})}/></div></div></div>`}
+    <${Overlays}/></div></div>`;
+}
+const GROUPS = [['Public',['P0','P3','P4']],['Student',['S0','S1.1','S1.2','S1.3','S3.2','S2.1','S2.3','S2.4','S4.1','S4.3','M3.1','S5.1','S5.2','S6.1','S7']],['Landlord',['L0','L1','L1.1','L1.6','L2','L2.1','L2.2','L3','L4','L5','L7']],['Shared modules',['M1.1','M1.2','M2.1','M2.2','M5.1','M5.2','M6.1']]];
+function jump(id){ const m=SCREENS[id]; set(s=>{ if(m.r!=='any') s.role=m.r; s.sheet=null; s.ext=null; s.lb=null; const st=s.stack[s.role]; if(m.auth){ s.role='student'; s.stack.student=[{id:'P0'},...(id==='P0'?[]:[{id}])]; } else { const dp = id==='M1.2' ? {id:s.role==='landlord'?'L:dorm':'group'} : (DEF[id]||{}); s.stack[s.role]=[{id:s.role==='student'?'S0':'L0'},...((id==='S0'||id==='L0')?[]:[{id,p:dp}])]; } }); scrollTop(); }
+function Panel(){
+  const c=cur();
+  return html`<aside class="panel"><h1>Campus Nest</h1><p>Interactive prototype · ICT Endterm, SE-2617. Every button works: tap, swipe, upload your own photos.</p>
+    <div class="seg"><button class=${ST.role==='student'?'on':''} onClick=${()=>switchRole('student')}>Student</button><button class=${ST.role==='landlord'?'on':''} onClick=${()=>switchRole('landlord')}>Landlord</button></div>
+    <div class="seg"><button class=${ST.device==='phone'?'on':''} onClick=${()=>set(s=>{s.device='phone'})}>Mobile app</button><button class=${ST.device==='web'?'on':''} onClick=${()=>set(s=>{s.device='web'})}>Website</button></div>
+    <div class="jump">${GROUPS.map(([g,ids])=>html`<h2>${g}</h2>${ids.map(id=>html`<button class=${c.id===id?'cur':''} onClick=${()=>jump(id)}><code>${id}</code>${SCREENS[id].t}</button>`)}`)}</div>
+    <div class="hint">Try the main path: Welcome → Create account → Roommates (swipe) → Housing → Apply as a group → switch to Landlord and accept → sign → pay → check in.</div></aside>`;
+}
+function Fab(){ return html`<div class="fab"><button class=${ST.role==='student'?'on':''} onClick=${()=>switchRole('student')}>Student</button><button class=${ST.role==='landlord'?'on':''} onClick=${()=>switchRole('landlord')}>Landlord</button><button class=${ST.device==='web'?'on':''} onClick=${()=>set(s=>{s.device=s.device==='web'?'phone':'web'})}>Web</button></div>`; }
+function App(){
+  const [,f]=useState(0); useEffect(()=>{const s=()=>f(x=>x+1);subs.add(s);return()=>subs.delete(s)},[]);
+  return html`<div class="stage"><${Panel}/>${ST.device==='phone'?html`<${Phone}/>`:html`<${Web}/>`}<${Fab}/></div>`;
+}
+render(html`<${App}/>`, document.getElementById('app'));
+</script>
+</body>
+</html>
