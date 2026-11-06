@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Campus Nest · Interactive prototype</title>
-<!-- Paste your Cloudflare Worker URL here to turn on free live AI on GitHub Pages, e.g. https://campus-nest-ai.yourname.workers.dev -->
+<!-- On Cloudflare (*.workers.dev) AI turns on automatically. On GitHub Pages paste the Worker address here, e.g. https://campus-nest.yourname.workers.dev/api/ai -->
 <meta name="cn-ai-endpoint" content="https://campus-nest.kasssaim291.workers.dev/">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -759,7 +759,7 @@ function S12(){
 }
 function S13(){ const mw=useMatchWarnings();
   return html`<div class="body"><${Top} title="Matches" sub="Mutual likes only" right=${html`<${AiBadge} st=${mw.st}/>`}/><div class="pad"><div class="list">
-    ${ST.matches.map(id=>{ const p=PEOPLE[id]; const r=reason(id); const inG=ST.group.members.includes(id); const w = mw.st==='live' ? (mw.d[p.name]||null) : r.warn;
+    ${ST.matches.map(id=>{ const p=PEOPLE[id]; const r=reason(id); const inG=ST.group.members.includes(id); const w = mw.st==='live' ? (r.warn ? (nz(mw.d[p.name])||r.warn) : null) : r.warn;
       return html`<div class="card"><div class="row"><button onClick=${()=>sheet('profile',{id})}><${Av} id=${id} size=${52}/></button><div class="grow"><div style="font-weight:700;font-size:16px">${p.name}</div><div class="muted small">${score(ST.me,p)}% compatibility · Trust ${trustOf(id)}</div></div>${ST.unread[id]?html`<span class="pill coral">${ST.unread[id]} new</span>`:''}</div>
       ${w? html`<div class="pill coral" style=${'margin-top:10px;white-space:normal;line-height:1.35'+(mw.st==='loading'?';opacity:.55':'')}>${Ic('spark',14)} AI warning: ${String(w).replace(/\.$/,'')}</div>` : html`<div class="pill mint" style="margin-top:10px">${Ic('spark',14)} AI: no conflicts found</div>`}
       <div class="btns" style="margin-top:12px"><button class="btn sm p" style="flex:1" onClick=${()=>{set(s=>{s.unread[id]=0});nav('M1.2',{id});}}>Chat</button><button class="btn sm g" style="flex:1" disabled=${inG} onClick=${()=>{ if(ST.group.members.length>=5){toast('A group can have up to 5 members');return;} set(s=>{s.group.members.push(id)}); toast(`${p.name} joined ${ST.group.name}`); nav('S3.2'); }}>${inG?'In your group':'Invite to group'}</button></div></div>`; })}
@@ -1126,7 +1126,8 @@ function L7(){
 
 /* ================= LIVE AI: Claude via the artifact `sample` capability ================= */
 let PROVIDER=null, aiBlockedUntil=0;
-const AI_URL=(document.querySelector('meta[name="cn-ai-endpoint"]')?.content||'').trim();
+const AI_META=(document.querySelector('meta[name="cn-ai-endpoint"]')?.content||'').trim();
+const AI_URL=AI_META || (/\.(workers|pages)\.dev$/.test(location.hostname) ? '/api/ai' : '');
 ST.ai={mode:'loading',cache:{},pending:{},name:''};
 (async()=>{
   let s=null; try{ if(window.claude&&typeof window.claude.use==='function') s=await window.claude.use('sample'); }catch(e){ s=null; }
@@ -1143,6 +1144,8 @@ const FN={sleep:'sleep timing',clean:'cleanliness',smoke:'smoking',guests:'guest
 const hab = p => `sleeps ${SLEEP[p.sleep]}; cleanliness ${p.clean}/5; ${SMOKE[p.smoke]}; has guests ${GUESTS[p.guests].toLowerCase()}; pets: ${PETS[p.pets]}; budget ${p.budget[0]}–${p.budget[1]}k KZT per month; speaks ${p.langs.join(', ')}`;
 const wtxt = () => Object.keys(BASEW).map(k=>`${FN[k]} ${(ST.wmul[k]*(ST.notImp[k]?.25:1)).toFixed(2)}`).join(', ');
 const meSig = () => JSON.stringify([ST.me.sleep,ST.me.clean,ST.me.smoke,ST.me.guests,ST.me.pets,ST.me.budget]);
+const nz = v => { if(v==null) return null; const t=String(v).trim(); return (!t || /^(none|null|n\/a|no|no conflicts?|nothing|-)\.?$/i.test(t)) ? null : t; };
+function facts(a,b){ const s=sims(a,b); const good=Object.keys(s).filter(k=>s[k]>=.8).map(k=>FN[k]); const bad=Object.keys(s).filter(k=>s[k]<.5).sort((x,y)=>s[x]-s[y]).map(k=>FN[k]); return `Computed facts (true, do not contradict): they match on ${good.join(', ')||'nothing important'}; ${bad.length?`they clearly differ on ${bad.join(', ')}`:'they have no real conflicts'}.`; }
 const RULES = 'Rules: use only the facts given; never mention looks, photos, gender, age, ethnicity or nationality; never invent habits.';
 function useAI(key, task, prompt, on=true){
   const c=ST.ai.cache[key], pend=ST.ai.pending[key], mode=ST.ai.mode;
@@ -1171,13 +1174,14 @@ function AiReason({pid,sc,r,live}){
   const prompt=`You write the "Why this score" note on a roommate card in Campus Nest, a student housing app in Astana, Kazakhstan. The compatibility score ${sc}% is already computed by a formula; explain it to the user, addressing them as "you", in plain friendly English.
 User: ${hab(ST.me)}.
 ${p.name}: ${hab(p)}.
+${facts(ST.me,p)}
 How much each factor matters to this user (1.00 = average; higher = matters more, learned from their likes and skips; 0.25 = they marked it not important): ${wtxt()}.
 ${RULES}
 Reply with only JSON: {"reason": "max 35 words: the most important matching habit; if a factor matters more to this user than average, say so", "warning": "the single biggest conflict in max 14 words, or null", "top_factor": "one of sleep, clean, smoke, guests, pets, budget: the factor that helped the score most"}`;
   const a=useAI(key,'reason',prompt,live);
   const L=a.st==='live';
-  const reasonT = L&&a.d.reason ? a.d.reason : r.main;
-  const warnT = L ? a.d.warning : r.warn;
+  const reasonT = L&&nz(a.d.reason) ? nz(a.d.reason) : r.main;
+  const warnT = L ? (r.warn ? nz(a.d.warning) : null) : r.warn;
   const top = L&&BASEW[a.d.top_factor]!==undefined ? a.d.top_factor : r.topKey;
   return html`<div class="ai"><div class="k">${Ic('spark',15)} Why this score${live&&html`<${AiBadge} st=${a.st}/>`}</div><p style=${a.st==='loading'?'opacity:.55':''}>${reasonT}</p>${warnT&&html`<p style="color:var(--coral);margin-top:6px">Watch out: ${String(warnT).replace(/\.$/,'')}.</p>`}${top&&html`<button class="small" style="color:var(--peri);margin-top:8px;font-weight:600" onClick=${()=>{set(s=>{s.notImp[top]=true});toast('Got it. '+FN[top][0].toUpperCase()+FN[top].slice(1)+' will count less in your scores.');}}>Not important to me</button>`}</div>`;
 }
@@ -1186,7 +1190,8 @@ function useMatchWarnings(){
   const key='matches:'+ms.join(',')+':'+meSig();
   const prompt=`You check roommate matches for everyday conflicts in Campus Nest, a student housing app. For each match, compare them with the user and name the single most likely conflict in max 14 words, addressing the user as "you", or null if they fit well.
 User: ${hab(ST.me)}.
-${ms.map(id=>`${PEOPLE[id].name}: ${hab(PEOPLE[id])}.`).join('\n')}
+${ms.map(id=>`${PEOPLE[id].name}: ${hab(PEOPLE[id])}. ${facts(ST.me,PEOPLE[id])}`).join('\n')}
+If the computed facts say there are no real conflicts, use null.
 ${RULES}
 Reply with only a JSON object mapping each first name to a string or null, for example {"Timur": "He has guests often, you prefer rarely", "Dana": null}`;
   return useAI(key,'matches',prompt,true);
@@ -1197,10 +1202,11 @@ function AiGroup({g}){
   const prompt=`You are the group conflict checker in Campus Nest. These students (a group of up to 5) plan to rent one flat together. Find the single biggest risk of everyday conflict in the group and state it with counts (for example "3 of 4 go to bed before 23:00").
 ${ps.map(([n,p])=>`${n}: ${hab(p)}.`).join('\n')}
 For Aruzhan, factor importance learned from her swipes (1.00 = average): ${wtxt()}.
+Computed check (true, do not contradict): ${g.risk?`biggest risk is ${g.risk.k.toLowerCase()}: ${g.risk.t}`:'no real risk in this group'}.
 ${RULES}
 Reply with only JSON: {"risk_title": "2-3 words, or null if there is no real risk", "risk_text": "max 40 words with counts", "tip": "one practical house rule they could agree on, max 18 words"}`;
   const a=useAI(key,'group',prompt,true); const L=a.st==='live';
-  const title = L ? a.d.risk_title : g.risk?.k; const text = L ? a.d.risk_text : g.risk?.t; const tip = L ? a.d.tip : null;
+  const title = L ? (g.risk ? (nz(a.d.risk_title)||g.risk.k) : null) : g.risk?.k; const text = L ? (nz(a.d.risk_text)||g.risk?.t) : g.risk?.t; const tip = L ? nz(a.d.tip) : null;
   if(!title && !(a.st==='loading'&&g.risk)) return html`<div class="ai" style="margin-top:14px"><div class="k">${Ic('spark',15)} AI group check<${AiBadge} st=${a.st}/></div><p>${L&&text?text:'No major conflicts. Habits fit well.'}</p>${tip&&html`<p style="margin-top:6px;color:var(--mint)">Suggested rule: ${tip}</p>`}</div>`;
   return html`<div class="ai" style="margin-top:14px"><div class="k">${Ic('spark',15)} AI group warning · ${title||g.risk.k}<${AiBadge} st=${a.st}/></div><p style=${a.st==='loading'?'opacity:.55':''}>${text||g.risk.t}</p>${tip&&html`<p style="margin-top:6px;color:var(--mint)">Suggested rule: ${tip}</p>`}<div class="btns" style="margin-top:10px"><button class="btn sm s" onClick=${()=>nav('M1.2',{id:'group'})}>Discuss in group chat</button><button class="btn sm" style="color:var(--peri)" onClick=${()=>toast('Marked as discussed. AI will not show it again.')}>We agreed on it</button></div></div>`;
 }
@@ -1217,7 +1223,7 @@ Write 2 friendly questions Aruzhan could send, max 18 words each; the first one 
 ${RULES}
 Reply with only JSON: {"starters": ["...", "..."]}`;
   const a=useAI(key,'starters',prompt,true);
-  const list = a.st==='live'&&Array.isArray(a.d.starters) ? a.d.starters.slice(0,3).map(String) : fallback;
+  const ls = a.st==='live'&&Array.isArray(a.d.starters) ? a.d.starters.map(nz).filter(Boolean).slice(0,3) : []; const list = ls.length ? ls : fallback;
   return html`<div class="ai"><div class="k">${Ic('spark',15)} Conversation starters<${AiBadge} st=${a.st}/></div><p class="small muted" style="margin-bottom:8px">Built from both profiles, never from your messages. Tap to use.</p>${common.length>1&&html`<div class="chips" style="margin-bottom:8px">${common.map(l=>html`<button class=${'chip'+(l===lang?' on':'')} onClick=${()=>setLang(l)}>${l}</button>`)}</div>`}<div class="col" style="gap:8px">${list.map(s=>html`<button class="card flat tap" style=${'text-align:left;padding:10px 12px;font-size:13.5px;background:var(--s2)'+(a.st==='loading'?';opacity:.55':'')} onClick=${()=>onPick(s)}>${s}</button>`)}</div></div>`;
 }
 
