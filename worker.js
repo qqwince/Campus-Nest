@@ -2,9 +2,8 @@
 // No API key is needed: the model is reached through the Workers AI binding named "AI".
 // Optional variable ALLOWED_ORIGIN, e.g. https://yourname.github.io (without a trailing slash).
 
-// Any text-generation model from the Workers AI catalog works here.
-// Want DeepSeek? Use '@cf/deepseek-ai/deepseek-r1-distill-qwen-32b' (slower, uses more of the free quota).
-const MODEL = '@cf/zai-org/glm-4.7-flash';
+// Simple, fast, non-"thinking" models. The Worker tries them in order and uses the first that answers.
+const MODELS = ['@cf/meta/llama-3.1-8b-instruct', '@cf/meta/llama-3.2-3b-instruct', '@cf/meta/llama-3-8b-instruct'];
 
 // Only these four tasks are accepted, and each prompt must start with its fixed opening.
 // This stops strangers from using your free quota as a general chatbot.
@@ -36,28 +35,29 @@ export default {
       return reply({ error: 'Unknown task or prompt' }, 400, cors);
     }
 
-    try {
-      const result = await env.AI.run(MODEL, {
-        messages: [
-          { role: 'system', content: 'You are the backend of a student housing app. Reply with exactly one JSON value. No markdown, no explanations.' },
-          { role: 'user', content: prompt }
-        ],
-        max_tokens: 400,
-        temperature: 0.4
-      });
-      let text = result?.response ?? result?.choices?.[0]?.message?.content ?? result?.result?.response ?? '';
-      if (typeof text !== 'string') text = JSON.stringify(text);
-      text = text.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
-      const data = parseJson(text);
-      if (data === undefined || data === null || typeof data !== 'object') {
-        return reply({ error: 'The model did not return JSON', raw: text.slice(0, 300) }, 502, cors);
+    const errors = [];
+    for (const model of MODELS) {
+      try {
+        const result = await env.AI.run(model, {
+          messages: [
+            { role: 'system', content: 'You are the backend of a student housing app. Reply with exactly one JSON value. No markdown, no explanations.' },
+            { role: 'user', content: prompt }
+          ],
+          max_tokens: 512,
+          temperature: 0.3
+        });
+        let text = result?.response ?? result?.choices?.[0]?.message?.content ?? result?.result?.response ?? '';
+        if (typeof text !== 'string') text = JSON.stringify(text);
+        const data = parseJson(text.trim());
+        if (data && typeof data === 'object') return reply({ data, model }, 200, cors);
+        errors.push(model + ': no JSON (' + text.slice(0, 80) + ')');
+      } catch (e) {
+        const msg = String((e && e.message) || e);
+        if (/limit|quota|429|neuron|capacity/i.test(msg)) return reply({ error: 'Free daily AI quota used up, try again tomorrow' }, 429, cors);
+        errors.push(model + ': ' + msg.slice(0, 120));
       }
-      return reply({ data, model: MODEL }, 200, cors);
-    } catch (e) {
-      const msg = String((e && e.message) || e);
-      const limited = /limit|quota|429|neuron|capacity/i.test(msg);
-      return reply({ error: limited ? 'Free daily AI quota used up, try again tomorrow' : msg }, limited ? 429 : 502, cors);
     }
+    return reply({ error: 'No model answered', details: errors }, 502, cors);
   }
 };
 
