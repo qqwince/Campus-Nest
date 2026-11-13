@@ -6,13 +6,16 @@
 // Want DeepSeek? Use '@cf/deepseek-ai/deepseek-r1-distill-qwen-32b' (slower, uses more of the free quota).
 const MODEL = '@cf/zai-org/glm-4.7-flash';
 
-// Only these four tasks are accepted, and each prompt must start with its fixed opening.
+// Only these seven tasks are accepted, and each prompt must start with its fixed opening.
 // This stops strangers from using your free quota as a general chatbot.
 const TASKS = {
   reason: 'You write the "Why this score" note',
   matches: 'You check roommate matches',
   group: 'You are the group conflict checker',
-  starters: 'You suggest conversation starters'
+  starters: 'You suggest conversation starters',
+  assistant: 'You are Nest AI, the assistant inside Campus Nest',
+  profile: 'You fill in a lifestyle profile',
+  listing: 'You write a rental listing description'
 };
 
 export default {
@@ -32,7 +35,7 @@ export default {
     let body;
     try { body = await request.json(); } catch { return reply({ error: 'Body must be JSON' }, 400, cors); }
     const { task, prompt } = body || {};
-    if (!TASKS[task] || typeof prompt !== 'string' || prompt.length > 4000 || !prompt.startsWith(TASKS[task])) {
+    if (!TASKS[task] || typeof prompt !== 'string' || prompt.length > 6000 || !prompt.startsWith(TASKS[task])) {
       return reply({ error: 'Unknown task or prompt' }, 400, cors);
     }
 
@@ -42,7 +45,7 @@ export default {
           { role: 'system', content: 'You are the backend of a student housing app. Reply with exactly one JSON value. No markdown, no explanations.' },
           { role: 'user', content: prompt }
         ],
-        max_tokens: 400,
+        max_tokens: task === 'assistant' ? 600 : 400,
         temperature: 0.4
       });
       let text = result?.response ?? result?.choices?.[0]?.message?.content ?? result?.result?.response ?? '';
