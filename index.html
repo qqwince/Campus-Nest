@@ -30,18 +30,11 @@ input,textarea,select{font:inherit;color:inherit}
 
 /* ---------- stage ---------- */
 .stage{display:flex;flex-direction:column;align-items:center;gap:14px;padding:16px 24px 28px;min-height:100vh}
-.demo{display:flex;align-items:center;justify-content:center;gap:10px 22px;flex-wrap:wrap;width:100%;max-width:1240px}
-.demo .logo{font-family:var(--head);font-weight:700;font-size:20px;letter-spacing:-.01em;margin-right:auto}
-.demo .logo span{color:var(--primary)}
-.pick{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;color:var(--page-muted)}
 .seg{display:flex;background:var(--page-card);border:1px solid var(--page-line);border-radius:14px;padding:4px}
 .seg button{flex:1;padding:9px 16px;border-radius:10px;font-size:14px;font-weight:600;color:var(--page-muted);white-space:nowrap;display:flex;align-items:center;justify-content:center;gap:6px}
 .seg button.on{background:var(--primary);color:#fff}
-.aistat{margin-left:auto;display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:12px;font-size:13px;font-weight:600;border:1px solid var(--page-line);color:var(--page-muted);background:var(--page-card)}
-.aistat.on{border-color:#8C6BF0;color:#6B4DE6}
 .guide{display:flex;gap:10px;align-items:center;background:var(--page-card);border:1px solid var(--page-line);border-radius:14px;padding:9px 16px 9px 10px;font-size:14.5px;line-height:1.4;max-width:760px}
 .guide .q{width:28px;height:28px;border-radius:50%;background:var(--primary);color:#fff;display:grid;place-items:center;font-weight:700;flex:none}
-.fab{display:none}
 
 /* ---------- devices ---------- */
 .phone{width:390px;height:min(844px,calc(100vh - 150px));min-height:620px;border-radius:52px;background:#020114;padding:10px;box-shadow:0 30px 80px -30px rgba(20,15,90,.55);flex:none;position:relative}
@@ -295,17 +288,14 @@ textarea.inp{height:96px;padding:12px 14px;resize:none}
 .web .show-web{display:block}
 
 @media (max-width:860px){
+  .guide{display:none}
   .stage{padding:0;display:block}
-  .demo,.guide{display:none}
   .phone{width:100%;height:100vh;height:100dvh;min-height:0;border-radius:0;padding:0;box-shadow:none}
   .screen{border-radius:0}
   .notch{display:none}
   .browser{width:100%;height:100vh;min-height:0;border-radius:0}
   .wnav{overflow-x:auto;padding:0 10px}
   .wnav .brand{display:none}
-  .fab{display:flex;position:fixed;right:14px;bottom:calc(96px + env(safe-area-inset-bottom,0px));z-index:100;gap:6px;background:rgba(6,5,26,.9);border:1px solid #2E2A8A;border-radius:22px;padding:5px}
-  .fab button{padding:8px 11px;border-radius:16px;font-size:12px;font-weight:600;color:#B9BBE6}
-  .fab button.on{background:#5A63E8;color:#fff}
 }
 </style>
 </head>
@@ -489,7 +479,7 @@ function set(fn){ fn(ST); ST = {...ST}; subs.forEach(f=>f()); }
 let toastT;
 function toast(msg){ clearTimeout(toastT); set(s=>{s.toast=msg}); toastT=setTimeout(()=>set(s=>{s.toast=null}),2400); }
 const cur = () => { const st = ST.stack[ST.role]; return st[st.length-1]; };
-function nav(id,p={}){ set(s=>{ const r = SCREENS[id]?.role; if(r && r!=='any' && r!==s.role){ s.role=r; } s.stack[s.role].push({id,p}); s.sheet=null; }); scrollTop(); }
+function nav(id,p={}){ set(s=>{ const r = SCREENS[id]?.r; if(r && r!=='any' && r!==s.role){ s.role=r; } s.stack[s.role].push({id,p}); s.sheet=null; }); scrollTop(); }
 function root(id){ set(s=>{ s.stack[s.role]=[{id}]; s.sheet=null; }); scrollTop(); }
 function back(){ set(s=>{ const st=s.stack[s.role]; if(st.length>1) st.pop(); s.sheet=null; }); scrollTop(); }
 function sheet(type,p={}){ set(s=>{ s.sheet={type,p}; }); }
@@ -693,16 +683,18 @@ function P0(){
   </div></div>`;
 }
 function P3(){
-  const [code,setCode]=useState(''); const [show,setShow]=useState(false);
-  const login = () => { set(s=>{s.guest=false;s.stack.student=[{id:'S0'}]}); toast('Welcome back, Aruzhan'); };
+  const [code,setCode]=useState(''); const [show,setShow]=useState(false); const [role,setRole]=useState('student');
+  const LL=role==='landlord';
+  const login = () => { if(LL){ set(s=>{s.guest=false;s.role='landlord';s.stack.landlord=[{id:'L0'}]}); toast('Welcome back, Serik'); } else { set(s=>{s.guest=false;s.role='student';s.stack.student=[{id:'S0'}]}); toast('Welcome back, Aruzhan'); } };
   return html`<div class="body"><${Top} title="Log in"/><div class="pad">
-    <div class="field"><label>Email</label><input class="inp" type="email" value="aruzhan@astanait.edu.kz"/></div>
+    <div class="field"><label>I am a</label><div class="seg" style="background:var(--s1);border-color:var(--line)">${[['student','Student','users'],['landlord','Landlord','house']].map(([k,l,i])=>html`<button class=${role===k?'on':''} style=${role===k?'':'color:var(--muted)'} onClick=${()=>setRole(k)}>${Ic(i,17)} ${l}</button>`)}</div></div>
+    <div class="field"><label>Email</label><input class="inp" type="email" value=${LL?'serik.b@gmail.com':'aruzhan@astanait.edu.kz'}/></div>
     <div class="field"><label>Password</label><div style="position:relative"><input class="inp" type=${show?'text':'password'} value="campusnest2026"/><button style="position:absolute;right:12px;top:13px;color:var(--muted)" aria-label="Show password" onClick=${()=>setShow(!show)}>${Ic('eye',22)}</button></div><button class="small" style="align-self:flex-end;color:var(--peri);margin-top:4px" onClick=${()=>sheet('reset')}>Forgot password?</button></div>
     <div class="field"><label>Code from your authenticator app (in this demo you can leave it empty)</label><${OtpInput} onChange=${setCode}/></div>
     <span class="pill coral" style="margin-bottom:18px">${Ic('lock',14)} Two-factor login protects your documents</span>
     <button class="btn p" onClick=${login}>Log in</button>
     <div class="muted small" style="text-align:center;margin:14px 0">or</div>
-    <div class="col"><button class="btn s" onClick=${()=>{set(s=>{s.stack.student=[{id:'S0'}]});toast('Signed in with Google');}}>Continue with Google</button><button class="btn s" onClick=${()=>{set(s=>{s.stack.student=[{id:'S0'}]});toast('Signed in with Apple');}}>Continue with Apple</button></div>
+    <div class="col"><button class="btn s" onClick=${login}>Continue with Google</button><button class="btn s" onClick=${login}>Continue with Apple</button></div>
   </div></div>`;
 }
 function P4(){
@@ -1388,12 +1380,11 @@ const SCREENS = {
   L0:{t:'Dashboard',r:'landlord',c:L0},L1:{t:'My listings',r:'landlord',c:L1,wide:1},'L1.1':{t:'New listing',r:'landlord',c:L11,noTab:1},'L1.6':{t:'Manage listing',r:'landlord',c:L16},L2:{t:'Applications',r:'landlord',c:L2},'L2.1':{t:'Application review',r:'landlord',c:L21},'L2.2':{t:'Viewing calendar',r:'landlord',c:L22},L3:{t:'Leases',r:'landlord',c:L3},L4:{t:'Wallet and payouts',r:'landlord',c:L4},L5:{t:'Verification',r:'landlord',c:L5},L7:{t:'Profile',r:'landlord',c:L7}
 };
 const TABS = {student:[['S0','Home','home'],['S1.2','Roommates','users'],['S8','Ask AI','spark'],['S2.1','Housing','house'],['M1.1','Messages','chat'],['S7','Profile','user']],landlord:[['L0','Dashboard','home'],['L1','Listings','house'],['L2','Requests','doc'],['M1.1','Messages','chat'],['L7','Profile','user']]};
-const nav2 = () => ST.device==='web' ? 'in the menu at the top' : 'at the bottom';
 const HELP = {
-  P0:'Press “Try the demo” to enter the app right away.',
-  P3:'Everything is already filled in. Just press “Log in”.',
+  P0:'Press “Try the demo” to enter as a student, or “Log in” to choose Student or Landlord.',
+  P3:'Choose Student or Landlord at the top. Everything else is filled in: just press “Log in”.',
   P4:'Choose who you are, then press “Continue” on every step.',
-  S0:()=>`This is the home page. Press the purple card to ask the AI, or choose a section ${nav2()}.`,
+  S0:'This is the home page. Press the purple card to ask the AI, or choose a section at the bottom.',
   S8:'Type what you need like you would tell a friend, then press the round send button. Or tap one of the examples.',
   'S1.1':'Write about yourself in the purple box and let AI fill in the answers, or tap the answers yourself. Then press “Save”.',
   'S1.2':'Press “Like” if you would live with this person, or “Skip” if not. The purple box is AI explaining the match.',
@@ -1433,32 +1424,13 @@ function Phone(){
     <${C} key=${c.id+JSON.stringify(c.p||{})}/>
     ${!m.auth&&!m.noTab&&html`<${Tabbar}/>`}<${Overlays}/></div></div>`;
 }
-function Web(){
-  const c=cur(); const m=SCREENS[c.id]; const C=m.c; const st=ST.stack[ST.role]; const a=activeTab();
-  const url='campusnest.kz/'+(m.auth?'':ST.role+'/')+c.id.toLowerCase().replace('.','-');
-  return html`<div class="browser"><div class="bbar"><i></i><i></i><i></i><div class="url">${Ic('lock',13)} <span style="margin-left:6px">${url}</span></div></div>
-    <div class="wscreen web">${m.auth? html`<div class="wmain" style="align-items:center;overflow:auto"><div style="width:440px;padding:30px 0;display:flex;flex-direction:column;min-height:100%"><${C} key=${c.id}/></div></div>`
-    : html`<div class=${'wmain'+(m.wide?' wide':'')}><nav class="wnav"><div class="brand">Campus <span>Nest</span></div>${TABS[ST.role].map(([id,l,i])=>html`<button class=${'nb'+(a===id?' on':'')} onClick=${()=>root(id)}>${id==='S8'?html`<span class="orb">${Ic(i,15)}</span>`:Ic(i,19)}${l}${id==='M1.1'&&unreadAll()>0&&html`<span class="pill coral">${unreadAll()}</span>`}</button>`)}<span class="grow"></span>${ST.role==='student'&&html`<button class="iconbtn" aria-label="Notifications" onClick=${()=>nav('M2.1')}>${Ic('bell')}${ST.notifs.some(n=>!n.read)&&html`<span class="dot"></span>`}</button>`}</nav>
-      <div class="wtop">${st.length>1&&html`<button class="back" aria-label="Back" onClick=${back}>${Ic('back',20)}</button>`}<div class="t">${m.t}</div></div>
-      <div class="wbody" style=${m.full?'display:flex;flex-direction:column;padding:0 28px;overflow:hidden':''}><div class=${'cnt'+(m.wide?' wide':'')} style=${m.full?'flex:1;display:flex;flex-direction:column;min-height:0;max-width:760px;width:100%':''}><${C} key=${c.id+JSON.stringify(c.p||{})}/></div></div></div>`}
-    <${Overlays}/></div></div>`;
-}
-function DemoBar(){
-  const ai=ST.ai.mode;
-  return html`<header class="demo"><div class="logo">Campus <span>Nest</span></div>
-    <div class="pick">I am a<div class="seg"><button class=${ST.role==='student'?'on':''} onClick=${()=>switchRole('student')}>${Ic('users',17)} Student</button><button class=${ST.role==='landlord'?'on':''} onClick=${()=>switchRole('landlord')}>${Ic('house',17)} Landlord</button></div></div>
-    <div class="pick">Show as<div class="seg"><button class=${ST.device==='phone'?'on':''} onClick=${()=>set(s=>{s.device='phone'})}>Phone app</button><button class=${ST.device==='web'?'on':''} onClick=${()=>set(s=>{s.device='web'})}>Website</button></div></div>
-    <span class=${'aistat'+(ai==='live'?' on':'')} title=${ai==='live'?'Purple AI blocks are written live by the model':'No AI model is connected, so purple AI blocks use simple built-in rules'}>${Ic('spark',15)} ${ai==='live'?'AI is live · '+ST.ai.name:ai==='loading'?'AI: connecting…':'AI is not connected · built-in rules'}</span>
-  </header>`;
-}
 function Guide(){
   const h=HELP[cur().id]; if(!h) return null;
-  return html`<div class="guide"><span class="q">?</span><span><b>What to do here: </b>${typeof h==='function'?h():h}</span></div>`;
+  return html`<div class="guide"><span class="q">?</span><span><b>What to do here: </b>${h}</span></div>`;
 }
-function Fab(){ return html`<div class="fab"><button class=${ST.role==='student'?'on':''} onClick=${()=>switchRole('student')}>Student</button><button class=${ST.role==='landlord'?'on':''} onClick=${()=>switchRole('landlord')}>Landlord</button><button class=${ST.device==='web'?'on':''} onClick=${()=>set(s=>{s.device=s.device==='web'?'phone':'web'})}>Web</button></div>`; }
 function App(){
   const [,f]=useState(0); useEffect(()=>{const s=()=>f(x=>x+1);subs.add(s);return()=>subs.delete(s)},[]);
-  return html`<div class="stage"><${DemoBar}/><${Guide}/>${ST.device==='phone'?html`<${Phone}/>`:html`<${Web}/>`}<${Fab}/></div>`;
+  return html`<div class="stage"><${Guide}/><${Phone}/></div>`;
 }
 render(html`<${App}/>`, document.getElementById('app'));
 </script>
