@@ -169,6 +169,21 @@ textarea.inp{height:96px;padding:12px 14px;resize:none}
 .dots3 i:nth-child(2){animation-delay:.15s}
 .dots3 i:nth-child(3){animation-delay:.3s}
 @keyframes bob{0%,100%{transform:translateY(0);opacity:.5}50%{transform:translateY(-5px);opacity:1}}
+.think{display:flex;flex-direction:column;gap:6px;font-size:13.5px;color:var(--muted)}
+.think div{display:flex;align-items:center;gap:8px}
+.think div span{width:16px;display:inline-grid;place-items:center;color:var(--mint)}
+.think .ok{color:var(--text)}
+.think .now{color:var(--lilac)}
+.think .sp{width:11px;height:11px;border-radius:50%;border:2px solid rgba(195,166,247,.3);border-top-color:var(--lilac);animation:rot .8s linear infinite;display:block}
+.caret{display:inline-block;width:2px;height:15px;background:var(--lilac);margin-left:2px;vertical-align:-2px;animation:blink .8s steps(2) infinite}
+@keyframes blink{to{opacity:0}}
+.send.rec{background:var(--coral);animation:pulse 1s ease-in-out infinite}
+.send[disabled]{opacity:.5}
+.vis{margin-top:8px;background:linear-gradient(160deg,#2A1F6A,#1C1650);border:1px solid rgba(195,166,247,.55);border-radius:14px;padding:10px 12px;font-size:13px;line-height:1.45}
+.vis .k{font-size:11.5px;font-weight:700;color:var(--lilac);display:flex;align-items:center;gap:5px;margin-bottom:3px}
+.scan{position:relative;overflow:hidden}
+.scan::after{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:linear-gradient(90deg,transparent,#C3A6F7,transparent);box-shadow:0 0 14px #C3A6F7;animation:scan 1.3s linear infinite}
+@keyframes scan{to{top:100%}}
 
 /* tabbar */
 .tabbar{flex:none;height:84px;background:var(--s1);border-top:1px solid var(--line);display:flex;padding:8px 6px 18px}
@@ -571,7 +586,8 @@ const IP = {
   copy:'<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V4H4v12h4"/>',
   edit:'<path d="M4 20h4L19 9l-4-4L4 16z"/>',
   bolt:'<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',
-  pin:'<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>'
+  pin:'<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>',
+  mic:'<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6"/>'
 };
 const Ic = (n,s=22,cls='') => html`<svg class=${'icon '+cls} style=${`width:${s}px;height:${s}px`} viewBox="0 0 24 24" dangerouslySetInnerHTML=${{__html:IP[n]}}></svg>`;
 
@@ -667,6 +683,13 @@ const SHEETS = {
   review:({target})=>{const [n,setN]=useState(5); const tags=['Clean flat','Quiet neighbours','Fast replies','As in photos','Fair deposit']; const [t,setT]=useState(['As in photos']); return html`<div class="h1">Review ${target||'your stay'}</div><p class="muted small">You can review only after a real contract. This keeps reviews honest.</p><div class="stars" style="margin:14px 0">${[1,2,3,4,5].map(i=>html`<button class=${i<=n?'on':''} aria-label=${i+' stars'} onClick=${()=>setN(i)}>★</button>`)}</div><div class="chips">${tags.map(x=>html`<button class=${'chip'+(t.includes(x)?' on':'')} onClick=${()=>setT(t.includes(x)?t.filter(y=>y!==x):[...t,x])}>${x}</button>`)}</div><div class="field" style="margin-top:14px"><textarea class="inp" placeholder="Anything else future tenants should know?"></textarea></div><button class="btn p" onClick=${()=>{closeSheet();toast('Review published. Thank you!');}}>Publish review</button>`;},
   pwd:()=>html`<div class="h1">Change password</div><div class="field" style="margin-top:12px"><label>Current password</label><input class="inp" type="password" value="password1"/></div><div class="field"><label>New password</label><input class="inp" type="password" placeholder="At least 10 characters"/></div><button class="btn p" onClick=${()=>{closeSheet();toast('Password changed. Other devices were signed out.');}}>Change password</button>`,
   del:()=>{const [v,setV]=useState(''); return html`<div class="h1">Delete account</div><p class="muted" style="line-height:1.5">Your profile, matches and documents will be deleted. Contracts are kept for 5 years as the law requires.</p><div class="field"><label>Type DELETE to confirm</label><input class="inp" value=${v} onInput=${e=>setV(e.target.value)}/></div><button class="btn d" disabled=${v!=='DELETE'} onClick=${()=>{closeSheet();toast('Account deletion requested. You have 14 days to change your mind.');}}>Delete my account</button>`;},
+  aisetup:()=>{const [u,setU]=useState(AI_URL); const [st,setSt]=useState(null); const live=ST.ai.mode==='live';
+    const save=async()=>{ const url=u.trim().replace(/\/$/,''); if(!url){ try{localStorage.removeItem('cn-ai-endpoint')}catch(e){} AI_URL=''; await connectAI(); closeSheet(); toast('AI disconnected. Built-in rules are used.'); return; } setSt('testing'); const ok=await testAI(url); if(!ok){ setSt('bad'); return; } try{localStorage.setItem('cn-ai-endpoint',url)}catch(e){} AI_URL=url; await connectAI(); closeSheet(); toast('AI connected: Cloudflare Workers AI'); };
+    return html`<div class="row"><span class="orb">${Ic('spark',22)}</span><div class="grow"><div class="h1">Nest AI connection</div><div class="muted small">${live?'Connected · '+ST.ai.name:'Not connected · built-in rules are used'}</div></div></div>
+    <p class="muted small" style="line-height:1.5;margin:12px 0">Paste the address of your Cloudflare Worker (see README, 10 minutes, free). It is saved in this browser only. With it, every purple block is written live by a language model, and photos are checked by a vision model.</p>
+    <div class="field"><label>Worker address</label><input class="inp" placeholder="https://campus-nest-ai.yourname.workers.dev" value=${u} onInput=${e=>{setU(e.target.value);setSt(null);}}/></div>
+    ${st==='bad'&&html`<p class="small" style="color:var(--coral);margin:-6px 0 12px">No answer from this address. Open it in a browser: it must say “Campus Nest AI proxy is running”.</p>`}
+    <div class="col"><button class="btn p" disabled=${st==='testing'} onClick=${save}>${st==='testing'?'Checking…':u.trim()?'Connect':'Disconnect'}</button><button class="btn s" onClick=${closeSheet}>Cancel</button></div>`;},
   doc:({kind})=>html`<div class="h1">${kind}</div><p class="muted small">Upload a clear photo or PDF. A moderator checks it, usually within a day. Scans of IDs are deleted after the check.</p><div style="margin:14px 0"><${AddPhoto} h=${120} label="Choose file" accept="image/*,.pdf" onFiles=${()=>{closeSheet();toast(kind+' uploaded. Status: pending review.');}}/></div>`
 };
 
@@ -680,6 +703,7 @@ function P0(){
       ${[['users','Roommates by habits','Sleep, cleanliness, guests: not luck','var(--peri)'],['shield','Verified landlords','ID and ownership checked','var(--mint)'],['lock','Deposit held by a bank','Released only after you move in','var(--amber)']].map(([i,t,s,c])=>html`<div class="row"><div class="tile" style=${`background:color-mix(in srgb, ${c} 20%, transparent);color:${c}`}>${Ic(i)}</div><div><div style="font-weight:600">${t}</div><div class="muted small">${s}</div></div></div>`)}
     </div>
     <div class="col" style="margin-top:26px"><button class="btn p" style="height:58px;font-size:17px" onClick=${()=>{set(s=>{s.guest=false;s.stack.student=[{id:'S0'}]});toast('You are in as Aruzhan, a demo student');}}>Try the demo</button><div class="btns"><button class="btn g" onClick=${()=>nav('P4')}>Create account</button><button class="btn g" onClick=${()=>nav('P3')}>Log in</button></div><button class="btn" style="height:40px;color:var(--peri);font-size:15px" onClick=${()=>{set(s=>{s.guest=true});nav('S2.1');}}>Browse flats as a guest</button></div>
+    <button class="row" style="width:100%;margin-top:14px;padding:10px 12px;border-radius:14px;background:var(--s1);text-align:left" onClick=${()=>sheet('aisetup')}><span class="orb" style="width:32px;height:32px">${Ic('spark',16)}</span><span class="grow small">${ST.ai.mode==='live'?html`<b style="color:var(--lilac)">Nest AI is live</b> · ${ST.ai.name}`:ST.ai.mode==='loading'?'Connecting to AI…':html`<b>Nest AI is offline</b> · tap to connect a model`}</span><span class="chev">›</span></button>
   </div></div>`;
 }
 function P3(){
@@ -933,6 +957,7 @@ function S52(){
      : html`<div class="card" style="border-color:var(--amber);background:rgba(246,198,103,.08)"><div class="small" style="color:var(--amber)">Time left to report problems</div><div style="font-family:var(--head);font-size:24px;margin-top:4px">${Math.floor(left/86400)} d ${hh} h ${String(mm).padStart(2,'0')} m ${String(ss).padStart(2,'0')} s</div><div class="muted small" style="margin-top:4px">If you do nothing, the deposit goes to the landlord automatically.</div></div>`}
     <div class="between" style="margin:18px 0 10px"><b>${done} of ${rooms.length} rooms photographed</b><div class="bar" style="width:100px"><i style=${`width:${done/rooms.length*100}%`}></i></div></div>
     ${rooms.map(r=>{const arr=c.photos[r]||[]; return html`<div style="margin-bottom:14px"><div class="between small" style="margin-bottom:6px"><b>${r}</b>${!arr.length&&!c.done&&html`<button style="color:var(--peri)" onClick=${()=>addTo(r,[{src:room(...sample[r]),name:'sample'}])}>Use sample photo</button>`}</div><div class="grid3">${arr.map((p,i)=>html`<${Photo} src=${p.src} h=${96} imgs=${all} i=${all.indexOf(p.src)} onRemove=${c.done?null:()=>set(s=>{s.checkin.photos[r]=s.checkin.photos[r].filter((_,j)=>j!==i)})}/>`)}${!c.done&&html`<${AddPhoto} h=${96} label="Add" onFiles=${fs=>addTo(r,fs)}/>`}</div></div>`;})}
+    ${all.length>0&&!c.done&&html`<${PhotoCheck} photos=${all.map(s=>({src:s}))} kind="checkin"/>`}
     ${!c.done&&!c.dispute&&html`<div class="col" style="margin-top:10px"><button class="btn p" disabled=${done<rooms.length} onClick=${()=>sheet('confirm',{title:'Everything is OK?',text:'The deposit will be released to the landlord now. You cannot open a dispute after this.',ok:'Release deposit',onOk:()=>{set(s=>{s.checkin.done=true;if(s.lease)s.lease.deposit='released';});toast('Deposit released to the landlord');}})}>Everything is OK</button><button class="btn d" onClick=${()=>sheet('dispute')}>Report a problem</button>${done<rooms.length&&html`<p class="muted small" style="text-align:center;margin:0">Add a photo of every room to finish</p>`}</div>`}
   </div></div>`;
 }
@@ -950,7 +975,7 @@ function S61(){
 }
 function S7(){
   const p=ST.profile;
-  const menu=[['spark','Lifestyle answers','Used for AI matching','S1.1'],['shield','Trust Score',ST.trust.score+' / 100','S6.1'],['key','Student ID','Verified by a moderator',null,()=>sheet('doc',{kind:'Student card'})],['lock','Security','Password, 2FA, devices','M5.1'],['bell','Notification settings','Choose what you get','M2.2'],['eye','Privacy Center','Export or delete data','M5.2'],['help','Help and reports','FAQ and support','M6.1']];
+  const menu=[['spark','Lifestyle answers','Used for AI matching','S1.1'],['bolt','Nest AI connection',ST.ai.mode==='live'?'Live · '+ST.ai.name:'Offline · built-in rules',null,()=>sheet('aisetup')],['shield','Trust Score',ST.trust.score+' / 100','S6.1'],['key','Student ID','Verified by a moderator',null,()=>sheet('doc',{kind:'Student card'})],['lock','Security','Password, 2FA, devices','M5.1'],['bell','Notification settings','Choose what you get','M2.2'],['eye','Privacy Center','Export or delete data','M5.2'],['help','Help and reports','FAQ and support','M6.1']];
   return html`<div class="body"><${Top} title="Profile" noBack=${true}/><div class="pad" style="padding-top:0">
     <div class="card" style="text-align:center"><div style="display:flex;justify-content:center"><${Av} id="me" size=${86}/></div><div class="h1" style="margin-top:10px">Aruzhan Serikova</div><div class="muted small">${p.uni}, ${p.faculty}, year ${p.course}</div><div style="margin-top:8px"><span class="pill mint">${Ic('shield',13)} Student ID verified</span></div><p class="small" style="line-height:1.5;margin:12px 0 0">${p.bio}</p><button class="btn sm g" style="margin:12px auto 0" onClick=${()=>sheet('confirm',{title:'Edit profile',text:'In the full app this opens a form for photo, bio, faculty and languages.',ok:'OK'})}>${Ic('edit',16)} Edit profile</button></div>
     <div class="list" style="margin-top:14px">${menu.map(([i,t,s,go,fn])=>html`<button class="item tap" onClick=${()=>fn?fn():nav(go)}><div class="tile" style="background:var(--s2)">${Ic(i)}</div><div class="grow"><div class="t">${t}</div><div class="s">${s}</div></div><span class="chev">›</span></button>`)}</div>
@@ -1075,7 +1100,7 @@ function L11(){
   const publish=()=>{ const id='n'+Date.now(); LISTINGS.push({id,title:d.title,type:d.type,addr:d.addr,dist:1.6,price:+d.price,area:+d.area,floor:d.floor,rooms:1,cond:d.cond,pets:rq.pets,promoted:false,verified:true,ll:'serik',photos:ph.length?ph:[['exterior',2],['living',3]],req:{rating:rq.rating,years:rq.years?1:0,sid:rq.sid,trust:rq.trust},desc:d.desc,mx:pin.x,my:pin.y,status:'moderation'}); VIEWS[id]=0; set(s=>{s.stack.landlord=[{id:'L0'},{id:'L1'}]}); toast('Published. A moderator checks it before students see it.'); setTimeout(()=>{const x=LISTINGS.find(y=>y.id===id); if(x){x.status='active';VIEWS[id]=3;} set(s=>{}); toast('Moderator approved your listing. It is live.');},4000); };
   return html`<div class="body"><${Top} title="New listing" sub=${`Step ${step+1} of 5 · ${steps[step]}`}/><div class="step">${steps.map((_,i)=>html`<i class=${i<=step?'on':''}></i>`)}</div><div class="pad">
     ${step===0&&html`<div class="field"><label>Title</label><input class="inp" value=${d.title} onInput=${e=>u('title',e.target.value)}/></div><div class="field"><label>Type</label><div class="chips">${['Apartment','Room','Studio','Dormitory'].map(t=>html`<button class=${'chip'+(d.type===t?' on':'')} onClick=${()=>u('type',t)}>${t}</button>`)}</div></div><div class="grid2"><div class="field"><label>Area, m²</label><input class="inp" type="number" value=${d.area} onInput=${e=>u('area',e.target.value)}/></div><div class="field"><label>Floor</label><input class="inp" value=${d.floor} onInput=${e=>u('floor',e.target.value)}/></div><div class="field"><label>Price per month, KZT</label><input class="inp" type="number" value=${d.price} onInput=${e=>u('price',e.target.value)}/></div><div class="field"><label>Condition</label><select class="inp" onChange=${e=>u('cond',e.target.value)}>${['New building','Renovated','Good','Needs light repair'].map(x=>html`<option selected=${x===d.cond}>${x}</option>`)}</select></div></div><div class="field"><div class="between"><label>Description</label><button class="pill lilac" disabled=${wb} onClick=${writeAI}>${Ic('spark',13)} ${wb?'AI is writing…':'Write with AI'}</button></div><textarea class="inp" style=${wb?'opacity:.5':''} value=${d.desc} onInput=${e=>u('desc',e.target.value)}></textarea></div>`}
-    ${step===1&&html`<p class="muted small" style="margin-top:0">Add at least 3 photos and an optional video tour. The first photo is the cover.</p><div class="grid3">${ph.map((p,i)=>html`<${Photo} src=${p.src} h=${100} imgs=${ph.map(x=>x.src)} i=${i} label=${i===0?'Cover':''} onRemove=${()=>setPh(ph.filter((_,j)=>j!==i))}/>`)}<${AddPhoto} h=${100} label="Add photos" onFiles=${fs=>setPh([...ph,...fs])}/></div><button class="small" style="color:var(--peri);margin-top:12px;font-weight:600" onClick=${()=>setPh([...ph,...[['living',3],['bedroom',3],['kitchen',3],['bath',3]].map(p=>({src:room(...p)}))])}>Add sample photos (demo)</button><div style="margin-top:14px"><${AddPhoto} h=${70} label="Add a video tour" multiple=${false} accept="video/*" onFiles=${()=>toast('Video added. It will be processed in a few minutes.')}/></div>`}
+    ${step===1&&html`<p class="muted small" style="margin-top:0">Add at least 3 photos and an optional video tour. The first photo is the cover. AI can look at each photo and tell students what it shows.</p><div class="grid3">${ph.map((p,i)=>html`<${Photo} src=${p.src} h=${100} imgs=${ph.map(x=>x.src)} i=${i} label=${i===0?'Cover':''} onRemove=${()=>setPh(ph.filter((_,j)=>j!==i))}/>`)}<${AddPhoto} h=${100} label="Add photos" onFiles=${fs=>setPh([...ph,...fs])}/></div>${ph.length>0&&html`<${PhotoCheck} photos=${ph} kind="listing"/>`}<button class="small" style="color:var(--peri);margin-top:12px;font-weight:600" onClick=${()=>setPh([...ph,...[['living',3],['bedroom',3],['kitchen',3],['bath',3]].map(p=>({src:room(...p)}))])}>Add sample photos (demo)</button><div style="margin-top:14px"><${AddPhoto} h=${70} label="Add a video tour" multiple=${false} accept="video/*" onFiles=${()=>toast('Video added. It will be processed in a few minutes.')}/></div>`}
     ${step===2&&html`<div class="field"><label>Address</label><input class="inp" value=${d.addr} onInput=${e=>u('addr',e.target.value)}/></div><p class="muted small">Tap the map to place the pin exactly.</p><div class="mapbox" style="cursor:crosshair" onClick=${e=>{const r=e.currentTarget.getBoundingClientRect();setPin({x:(e.clientX-r.left)/r.width,y:(e.clientY-r.top)/r.height});}}><div dangerouslySetInnerHTML=${{__html:mapArt(360,260)}}></div><span class="pin" style="left:55%;top:44%;background:var(--amber);color:#1A1406;border-color:var(--amber)">AITU</span><span class="pin on" style=${`left:${pin.x*100}%;top:${pin.y*100}%`}>${Ic('pin',14)}</span></div>`}
     ${step===3&&html`<p class="muted small" style="margin-top:0">Only students who meet these rules can apply. You will not get random messages.</p><div class="card"><div class="between" style="padding:8px 0"><span>Minimum rating</span><div class="row"><button class="btn sm s" onClick=${()=>setRq({...rq,rating:Math.max(0,rq.rating-.5)})}>–</button><b>${rq.rating||'Any'}</b><button class="btn sm s" onClick=${()=>setRq({...rq,rating:Math.min(5,rq.rating+.5)})}>+</button></div></div>${[['years','Account at least 1 year old'],['sid','Verified student ID'],['pets','Pets allowed']].map(([k,l])=>html`<div class="between" style="padding:10px 0"><span>${l}</span><${Sw} on=${rq[k]} onClick=${()=>setRq({...rq,[k]:!rq[k]})}/></div>`)}<div style="padding:10px 0"><div class="between"><span>Minimum Trust Score</span><b>${rq.trust}</b></div><input type="range" min="0" max="90" step="5" value=${rq.trust} style="width:100%;margin-top:8px" onInput=${e=>setRq({...rq,trust:+e.target.value})}/></div></div>`}
     ${step===4&&html`<p class="muted small" style="margin-top:0">Students answer these questions when they apply.</p><div class="list">${fields.map((f,i)=>html`<div class="item"><span class="grow">${f}</span><button aria-label="Remove question" onClick=${()=>setFields(fields.filter((_,j)=>j!==i))}>${Ic('x',18)}</button></div>`)}</div><h3>Add a question</h3><div class="chips">${['Do you smoke?','Monthly income source','University and year','Lease start flexibility','Will guests stay overnight?'].filter(x=>!fields.includes(x)).map(x=>html`<button class="chip" onClick=${()=>setFields([...fields,x])}>+ ${x}</button>`)}</div>`}
@@ -1150,19 +1175,30 @@ function L7(){
 
 /* ================= LIVE AI: Claude via the artifact `sample` capability ================= */
 let PROVIDER=null, aiBlockedUntil=0;
-const AI_URL=(document.querySelector('meta[name="cn-ai-endpoint"]')?.content||'').trim();
+let savedUrl=''; try{ savedUrl=localStorage.getItem('cn-ai-endpoint')||''; }catch(e){}
+let AI_URL=((document.querySelector('meta[name="cn-ai-endpoint"]')?.content||'').trim()||savedUrl).trim();
 ST.ai={mode:'loading',cache:{},pending:{},name:''};
-(async()=>{
+function workerProvider(url){
+  const post=async(body)=>{ let r; try{ r=await fetch(url,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)}); }catch(e){ throw {code:'upstream_error'}; }
+    if(r.status===429) throw {code:'rate_limited'}; if(r.status===403) throw {code:'not_granted'}; if(!r.ok) throw {code:'upstream_error'}; return r; };
+  return {name:'Cloudflare AI',
+    json:async(task,p)=>{ const r=await post({task,prompt:p}); const j=await r.json(); if(!j||j.data==null||typeof j.data!=='object') throw {code:'invalid_json'}; return j.data; },
+    vision:async(p,image)=>{ const r=await post({task:'vision',prompt:p,image}); const j=await r.json(); return j&&j.data&&typeof j.data.text==='string'?j.data.text:''; },
+    stream:async(task,p,onText)=>{ const r=await post({task,prompt:p,stream:true}); const rd=r.body.getReader(); const dec=new TextDecoder(); let buf='',out='';
+      while(true){ const {value,done}=await rd.read(); if(done) break; buf+=dec.decode(value,{stream:true}); const lines=buf.split('\n'); buf=lines.pop();
+        for(const ln of lines){ const t=ln.trim(); if(!t.startsWith('data:')) continue; const d=t.slice(5).trim(); if(d==='[DONE]') continue; try{ const j=JSON.parse(d); const piece=j.response??j.choices?.[0]?.delta?.content??''; if(piece){ out+=piece; onText(out); } }catch(e){} } }
+      return out; }};
+}
+async function connectAI(){
+  set(st=>{st.ai.mode='loading'});
   let s=null; try{ if(window.claude&&typeof window.claude.use==='function') s=await window.claude.use('sample'); }catch(e){ s=null; }
   if(s) PROVIDER={name:'Claude',json:(task,p)=>s.json(p,{modelTier:'quick'})};
-  else if(AI_URL) PROVIDER={name:'Cloudflare AI',json:async(task,p)=>{
-    let r; try{ r=await fetch(AI_URL,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({task,prompt:p})}); }catch(e){ throw {code:'upstream_error'}; }
-    if(r.status===429) throw {code:'rate_limited'};
-    if(r.status===403) throw {code:'not_granted'};
-    if(!r.ok) throw {code:'upstream_error'};
-    const j=await r.json(); if(!j||j.data==null||typeof j.data!=='object') throw {code:'invalid_json'}; return j.data; }};
-  set(st=>{st.ai.mode=PROVIDER?'live':'off'; st.ai.name=PROVIDER?PROVIDER.name:'';});
-})();
+  else if(AI_URL) PROVIDER=workerProvider(AI_URL);
+  else PROVIDER=null;
+  set(st=>{st.ai.mode=PROVIDER?'live':'off'; st.ai.name=PROVIDER?PROVIDER.name:''; st.ai.cache={}; st.ai.pending={};});
+}
+connectAI();
+async function testAI(url){ try{ const r=await fetch(url,{method:'GET'}); const t=await r.text(); return r.ok&&/Campus Nest AI proxy/.test(t); }catch(e){ return false; } }
 const FN={sleep:'sleep timing',clean:'cleanliness',smoke:'smoking',guests:'guests',pets:'pets',budget:'budget'};
 const hab = p => `sleeps ${SLEEP[p.sleep]}; cleanliness ${p.clean}/5; ${SMOKE[p.smoke]}; has guests ${GUESTS[p.guests].toLowerCase()}; pets: ${PETS[p.pets]}; budget ${p.budget[0]}–${p.budget[1]}k KZT per month; speaks ${p.langs.join(', ')}`;
 const wtxt = () => Object.keys(BASEW).map(k=>`${FN[k]} ${(ST.wmul[k]*(ST.notImp[k]?.25:1)).toFixed(2)}`).join(', ');
@@ -1185,9 +1221,9 @@ function useAI(key, task, prompt, on=true){
   return {st:'off'};
 }
 function AiBadge({st}){
-  if(st==='live') return html`<span class="pill lilac" style="margin-left:auto">Live · ${ST.ai.name||'AI'}</span>`;
+  if(st==='live') return html`<button class="pill lilac" style="margin-left:auto" onClick=${()=>sheet('aisetup')}>Live · ${ST.ai.name||'AI'}</button>`;
   if(st==='loading') return html`<span class="pill lilac" style="margin-left:auto;opacity:.8">Thinking…</span>`;
-  return html`<span class="pill peri" style="margin-left:auto;opacity:.75" title="Live AI is not available in this view; rule-based fallback">Offline rules</span>`;
+  return html`<button class="pill peri" style="margin-left:auto;opacity:.85" title="Tap to connect a live model" onClick=${()=>sheet('aisetup')}>Offline rules · connect</button>`;
 }
 function AiReason({pid,sc,r,live}){
   const p=PEOPLE[pid];
@@ -1278,27 +1314,37 @@ function localAsk(q){
   out.reply = out.people.length+out.listings.length ? 'I searched by the keywords in your message. Here is what fits best. Tap a card to open it.' : 'Nothing fits all of that. Try a higher price or fewer conditions.';
   return out;
 }
+const pickIds=(arr,ok)=>(Array.isArray(arr)?arr:[]).map(x=>typeof x==='string'?{id:x}:x).filter(x=>x&&ok(x.id)).slice(0,3).map(x=>({id:x.id,why:String(x.why||'')}));
 function askAI(q){
   q=String(q).trim(); if(!q||ST.asst.busy) return;
   const hist=ST.asst.msgs.slice(-4).map(m=>`${m.f==='me'?'User':'Nest AI'}: ${m.t.slice(0,200)}`).join('\n');
-  set(s=>{s.asst.msgs.push({f:'me',t:q}); s.asst.busy=true;});
+  set(s=>{s.asst.msgs.push({f:'me',t:q}); s.asst.busy=true; s.asst.live=''; s.asst.step=0;});
   const cands=Object.keys(PEOPLE).filter(id=>!ST.group.members.includes(id));
   const flats=LISTINGS.filter(l=>l.status!=='moderation'&&l.status!=='paused');
-  const prompt=`You are Nest AI, the assistant inside Campus Nest, a student housing app in Astana, Kazakhstan. The user is a student looking for roommates and a flat. Answer the user's message using ONLY the data below. When it helps, recommend up to 3 roommates and/or up to 3 flats, best first, and say why each one fits. Reply in the language of the user's message.
+  const base=`You are Nest AI, the assistant inside Campus Nest, a student housing app in Astana, Kazakhstan. The user is a student looking for roommates and a flat. Answer the user's message using ONLY the data below. When it helps, recommend up to 3 roommates and/or up to 3 flats, best first, and say why each one fits. Reply in the language of the user's message (Russian, Kazakh or English).
 User (Aruzhan): ${hab(ST.me)}. Dealbreakers: ${ST.me.dealbreakers.join(', ')||'none'}.
 Roommate candidates (id | name, university | habits):
 ${cands.map(id=>`${id} | ${PEOPLE[id].name}, ${PEOPLE[id].uni} | ${hab(PEOPLE[id])}`).join('\n')}
 Flats (id | title | type | price per month | distance to AITU | pets | landlord):
 ${flats.map(l=>`${l.id} | ${l.title} | ${l.type} | ${l.price} KZT | ${l.dist} km | pets ${l.pets?'allowed':'not allowed'} | ${l.verified?'verified':'not verified'}`).join('\n')}
 ${hist?'Conversation so far:\n'+hist+'\n':''}User message: "${q.slice(0,400)}"
-${RULES} Never recommend someone who breaks a dealbreaker without saying so.
-Reply with only JSON: {"reply": "max 60 words, friendly, plain language", "people": [{"id": "candidate id", "why": "max 14 words"}], "listings": [{"id": "flat id", "why": "max 14 words"}]}`;
+${RULES} Never recommend someone who breaks a dealbreaker without saying so.`;
   const t0=Date.now();
-  aiCall('assistant',prompt).then(d=>{
-    const live=!!(d&&typeof d.reply==='string'); const r=live?d:localAsk(q);
-    const pick=(arr,ok)=>(Array.isArray(arr)?arr:[]).map(x=>typeof x==='string'?{id:x}:x).filter(x=>x&&ok(x.id)).slice(0,3).map(x=>({id:x.id,why:String(x.why||'')}));
-    const msg={f:'ai',t:String(r.reply),people:pick(r.people,id=>!!PEOPLE[id]),listings:pick(r.listings,id=>LISTINGS.some(l=>l.id===id)),live,by:live?ST.ai.name:''};
-    setTimeout(()=>set(s=>{s.asst.msgs.push(msg);s.asst.busy=false;}),Math.max(0,800-(Date.now()-t0)));
+  const stepT=setInterval(()=>set(s=>{s.asst.step=Math.min(3,s.asst.step+1)}),450);
+  const finish=(msg)=>{ clearInterval(stepT); setTimeout(()=>set(s=>{s.asst.msgs.push(msg);s.asst.busy=false;s.asst.live='';}),Math.max(0,1400-(Date.now()-t0))); };
+  const offline=()=>{ const r=localAsk(q); finish({f:'ai',t:String(r.reply),people:pickIds(r.people,id=>!!PEOPLE[id]),listings:pickIds(r.listings,id=>LISTINGS.some(l=>l.id===id)),live:false,by:''}); };
+  if(PROVIDER&&PROVIDER.stream&&ST.ai.mode==='live'&&Date.now()>=aiBlockedUntil){
+    const prompt=base+`\nOutput format, exactly: first your reply to the user as plain text, max 70 words, friendly, no markdown. Then a new line with only ### and then one JSON object: {"people": [{"id": "candidate id", "why": "max 14 words"}], "listings": [{"id": "flat id", "why": "max 14 words"}]}`;
+    PROVIDER.stream('assistant',prompt,out=>{ const i=out.indexOf('###'); const vis=(i>=0?out.slice(0,i):out).replace(/<think>[\s\S]*?(<\/think>|$)/,''); set(s=>{s.asst.live=vis.trimStart(); s.asst.step=3;}); })
+      .then(out=>{ out=out.replace(/<think>[\s\S]*?(<\/think>|$)/,''); const i=out.indexOf('###'); const text=(i>=0?out.slice(0,i):out).trim(); let j={}; if(i>=0){ const raw=out.slice(i+3); const a=raw.indexOf('{'), b=raw.lastIndexOf('}'); if(a>=0&&b>a){ try{ j=JSON.parse(raw.slice(a,b+1)); }catch(e){ j={}; } } }
+        if(!text) return offline();
+        finish({f:'ai',t:text,done:true,people:pickIds(j.people,id=>!!PEOPLE[id]),listings:pickIds(j.listings,id=>LISTINGS.some(l=>l.id===id)),live:true,by:ST.ai.name}); })
+      .catch(e=>{ const code=e&&e.code; if(code==='rate_limited') aiBlockedUntil=Date.now()+60000; offline(); });
+    return;
+  }
+  aiCall('assistant',base+`\nReply with only JSON: {"reply": "max 60 words, friendly, plain language", "people": [{"id": "candidate id", "why": "max 14 words"}], "listings": [{"id": "flat id", "why": "max 14 words"}]}`).then(d=>{
+    if(!(d&&typeof d.reply==='string')) return offline();
+    finish({f:'ai',t:String(d.reply),people:pickIds(d.people,id=>!!PEOPLE[id]),listings:pickIds(d.listings,id=>LISTINGS.some(l=>l.id===id)),live:true,by:ST.ai.name});
   });
 }
 function Typed({m,onTick}){
@@ -1307,6 +1353,18 @@ function Typed({m,onTick}){
   useEffect(()=>{onTick&&onTick()});
   return html`<span>${m.t.slice(0,n)}</span>`;
 }
+const SR = window.SpeechRecognition||window.webkitSpeechRecognition;
+const VLANG={English:'en-US',Russian:'ru-RU',Kazakh:'kk-KZ'};
+function Mic({onText}){
+  const [on,setOn]=useState(false); const [lang,setLang]=useState('Russian'); const rec=useRef(null);
+  if(!SR) return null;
+  const start=()=>{ if(on){ rec.current?.stop(); return; } const r=new SR(); rec.current=r; r.lang=VLANG[lang]; r.interimResults=true; r.continuous=false;
+    r.onresult=e=>{ let t=''; for(const res of e.results) t+=res[0].transcript; onText(t, e.results[e.results.length-1].isFinal); };
+    r.onend=()=>setOn(false); r.onerror=()=>{ setOn(false); toast('Could not hear you. Check the microphone permission.'); };
+    r.start(); setOn(true); };
+  return html`<button class=${'send'+(on?' rec':'')} aria-label="Speak" title=${'Speak in '+lang+' (tap and hold the icon to change language)'} onClick=${start} onContextMenu=${e=>{e.preventDefault();const ks=Object.keys(VLANG);setLang(ks[(ks.indexOf(lang)+1)%ks.length]);toast('Voice language: '+ks[(ks.indexOf(lang)+1)%ks.length]);}}>${Ic('mic',20)}</button>`;
+}
+const THINK=['Reading your profile','Comparing 9 students','Checking 6 flats','Writing the answer'];
 function S8(){
   const a=ST.asst; const [txt,setTxt]=useState(''); const box=useRef();
   const down=()=>{ if(box.current) box.current.scrollTop=box.current.scrollHeight; };
@@ -1315,14 +1373,14 @@ function S8(){
   return html`<div style="display:flex;flex-direction:column;flex:1;min-height:0">
     <div class="top"><span class="orb">${Ic('spark',22)}</span><div class="grow"><h1>Nest AI</h1><div class="sub">Your housing assistant</div></div><${AiBadge} st=${aiSt()}/></div>
     <div class="body" ref=${box}><div class="pad" style="display:flex;flex-direction:column;gap:10px">
-      <div class="bubble in aib"><div class="aitag">${Ic('spark',13)} Nest AI</div>Hi Aruzhan! Tell me in your own words who you want to live with or what flat you need. I will pick the best options and explain why.</div>
+      <div class="bubble in aib"><div class="aitag">${Ic('spark',13)} Nest AI</div>Hi Aruzhan! Tell me in your own words who you want to live with or what flat you need. I will pick the best options and explain why.${SR?' You can also press the microphone and just say it.':''}</div>
       ${!a.msgs.length&&html`<div class="muted small" style="margin-top:6px">Tap an example or type your own below:</div>${ASK_CHIPS.map(c=>html`<button class="card flat tap" style="text-align:left;padding:12px 14px;font-size:14px;background:var(--s2)" onClick=${()=>go(c)}>${c}</button>`)}`}
       ${a.msgs.map(m=>m.f==='me'? html`<div class="bubble out">${m.t}</div>` : html`<div class="bubble in aib"><div class="aitag">${Ic('spark',13)} Nest AI · ${m.live?m.by:'offline rules'}</div><${Typed} m=${m} onTick=${down}/></div>
         ${m.people.map(p=>html`<button class="item tap aicard" onClick=${()=>sheet('profile',{id:p.id})}><${Av} id=${p.id} size=${46}/><div class="grow"><div class="t">${PEOPLE[p.id].name} · ${score(ST.me,PEOPLE[p.id])}% match</div><div class="s">${p.why}</div></div><span class="chev">›</span></button>`)}
         ${m.listings.map(x=>{const l=LISTINGS.find(y=>y.id===x.id); return html`<button class="item tap aicard" onClick=${()=>nav('S2.3',{id:l.id})}><img src=${photoSrc(l.photos[0])} alt="" style="width:52px;height:52px;border-radius:12px;object-fit:cover;flex:none"/><div class="grow"><div class="t">${l.title}</div><div class="s">${kzt(l.price)} · ${x.why}</div></div><span class="chev">›</span></button>`;})}`)}
-      ${a.busy&&html`<div class="bubble in aib"><div class="aitag">${Ic('spark',13)} Nest AI is thinking</div><span class="dots3"><i></i><i></i><i></i></span></div>`}
+      ${a.busy&&html`<div class="bubble in aib"><div class="aitag">${Ic('spark',13)} Nest AI ${a.live?'· '+ST.ai.name:'is thinking'}</div>${a.live? html`<span>${a.live}</span><span class="caret"></span>` : html`<div class="think">${THINK.map((t,i)=>html`<div class=${i<a.step?'ok':i===a.step?'now':''}><span>${i<a.step?Ic('check',13):i===a.step?html`<i class="sp"></i>`:'·'}</span>${t}</div>`)}</div>`}</div>`}
     </div></div>
-    <div class="composer"><input placeholder="Ask in your own words…" value=${txt} onInput=${e=>setTxt(e.target.value)} onKeyDown=${e=>{if(e.key==='Enter')go(txt)}} aria-label="Message to Nest AI"/><button class="send" aria-label="Send" disabled=${a.busy} onClick=${()=>go(txt)}>${Ic('send',20)}</button></div>
+    <div class="composer"><input placeholder="Ask in your own words…" value=${txt} onInput=${e=>setTxt(e.target.value)} onKeyDown=${e=>{if(e.key==='Enter')go(txt)}} aria-label="Message to Nest AI"/><${Mic} onText=${(t,fin)=>{setTxt(t); if(fin) go(t);}}/><button class="send" aria-label="Send" disabled=${a.busy} onClick=${()=>go(txt)}>${Ic('send',20)}</button></div>
   </div>`;
 }
 function localProfile(t){
@@ -1369,6 +1427,28 @@ Reply with only JSON: {"sleep": 0, "clean": 4, "smoke": "no", "guests": 1, "pets
   </div>`;
 }
 
+/* ================= VISION: photo inspection ================= */
+function toJpeg(src,max=768){ return new Promise(res=>{ const im=new Image(); im.onload=()=>{ const k=Math.min(1,max/Math.max(im.width,im.height)); const c=document.createElement('canvas'); c.width=Math.max(1,Math.round(im.width*k)); c.height=Math.max(1,Math.round(im.height*k)); const g=c.getContext('2d'); g.fillStyle='#fff'; g.fillRect(0,0,c.width,c.height); g.drawImage(im,0,0,c.width,c.height); res(c.toDataURL('image/jpeg',.82)); }; im.onerror=()=>res(null); im.src=src; }); }
+const INSPECT={
+  listing:'You inspect a photo for a student housing listing. Say in max 45 words: which room it is, its condition, what furniture and appliances are visible, and any problem a tenant should know about (damage, dirt, missing furniture). Plain, honest English.',
+  checkin:'You inspect a photo taken by a tenant on move-in day as evidence for the deposit. List in max 45 words every visible defect: damage, stains, cracks, mold, broken or missing items. If the room looks fine, say so. Plain English.'
+};
+async function inspect(src,kind){
+  if(!PROVIDER||!PROVIDER.vision||ST.ai.mode!=='live') return null;
+  const jpg=await toJpeg(src); if(!jpg) return null;
+  try{ const t=await PROVIDER.vision(INSPECT[kind],jpg); return t||null; }catch(e){ return null; }
+}
+function PhotoCheck({photos,kind}){
+  const [res,setRes]=useState({}); const [busy,setBusy]=useState(false);
+  const srcs=photos.map(p=>p.src);
+  const run=async()=>{ setBusy(true); const out={}; for(const s of srcs){ setRes(r=>({...r,[s]:'…'})); const t=await inspect(s,kind); out[s]=t||(ST.ai.mode==='live'?'AI could not read this photo.':'offline'); setRes(r=>({...r,[s]:out[s]})); } setBusy(false); toast(ST.ai.mode==='live'?'AI checked '+srcs.length+' photos':'Connect Nest AI to check photos with a vision model'); };
+  const done=srcs.filter(s=>res[s]&&res[s]!=='…').length;
+  return html`<div class="ai" style="margin-top:12px"><div class="k">${Ic('eye',15)} AI photo check<${AiBadge} st=${busy?'loading':aiSt()}/></div>
+    <p class="small" style="margin-bottom:8px">${kind==='listing'?'A vision model looks at every photo: which room it is, its condition and anything a tenant should know.':'A vision model looks for damage, stains and broken items in every photo. Its notes are attached to your evidence.'}</p>
+    ${done>0&&html`<div class="col" style="gap:6px;margin-bottom:8px">${srcs.filter(s=>res[s]).map((s,i)=>html`<div class="row" style="align-items:flex-start"><div class=${'photo'+(res[s]==='…'?' scan':'')} style="width:56px;height:56px;flex:none"><img src=${s} alt=""/></div><div class="small grow" style="line-height:1.4">${res[s]==='…'?html`<span class="dots3"><i></i><i></i><i></i></span>`:res[s]==='offline'?html`<span class="muted">No vision model connected.</span>`:res[s]}</div></div>`)}</div>`}
+    <button class="btn sm p" disabled=${busy} onClick=${run}>${busy?'AI is looking…':done?'Check again':'Check photos with AI'}</button></div>`;
+}
+
 /* ================= REGISTRY ================= */
 const SCREENS = {
   P0:{t:'Welcome',r:'any',c:P0,auth:1},P3:{t:'Log in',r:'any',c:P3,auth:1},P4:{t:'Create account',r:'any',c:P4,auth:1},
@@ -1397,15 +1477,15 @@ const HELP = {
   'S4.3':'Here you see how your application is going. Press the button at the bottom to move on.',
   'M3.1':'Read the contract terms and press “Sign contract”.',
   'S5.1':'This is the flat you rent. Press “Pay rent” to pay.',
-  'S5.2':'Add a photo of every room, then press “Everything is OK”.',
+  'S5.2':'Add a photo of every room, let AI check them for damage, then press “Everything is OK”.',
   'S6.1':'Your Trust Score shows landlords that you are reliable. Upload a document to raise it.',
-  S7:'Your profile and settings. Tap any row to open it.',
+  S7:'Your profile and settings. Tap any row to open it. “Nest AI connection” turns the live model on.',
   'M1.1':'Tap a chat to open it.',
   'M1.2':'Type a message and press the send button. The purple box suggests what to ask.',
   'M2.1':'Tap a notification to open it.',
   L0:'You are a landlord now. Tap a new application to answer it.',
   L1:'Your flats. Tap one to manage it, or press + to add a new one.',
-  'L1.1':'Fill in the form and press “Continue”. Press “Write with AI” to get a description.',
+  'L1.1':'Fill in the form and press “Continue”. “Write with AI” writes the description; on the Photos step AI checks every photo.',
   'L1.6':'Press “Promote” to show this flat higher in search.',
   L2:'Tap an application to read it.',
   'L2.1':'Read about the students, then press “Accept” or “Reject”.',
